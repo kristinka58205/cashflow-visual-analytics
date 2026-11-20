@@ -5,11 +5,18 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm
-from .models import BankAccount, CashCategory
+from .forms import AccountForm, CategoryForm, TransactionForm
+from .models import BankAccount, CashCategory, CashTransaction
+from .services import financial_summary
+from django.core.paginator import Paginator
+from django.utils import timezone
 
 
 def home(request):
+    if request.user.is_authenticated:
+        today = timezone.localdate()
+        start = today.replace(day=1)
+        return render(request, "cashflow/dashboard.html", {"summary": financial_summary(request.user, start, today), "start": start, "end": today})
     return render(request, "cashflow/home.html")
 
 
@@ -71,3 +78,31 @@ def catalog_delete(request, kind, pk):
             messages.success(request, "Запись удалена.")
         return redirect("catalog")
     return render(request, "cashflow/confirm_delete.html", {"instance": instance})
+
+
+@login_required
+def transaction_list(request):
+    entries = CashTransaction.objects.filter(account__owner=request.user).select_related("account", "category")
+    page = Paginator(entries, 25).get_page(request.GET.get("page"))
+    return render(request, "cashflow/transactions.html", {"page": page})
+
+
+@login_required
+def transaction_edit(request, pk=None):
+    entry = get_object_or_404(CashTransaction, account__owner=request.user, pk=pk) if pk else None
+    form = TransactionForm(request.POST if request.method == "POST" else None, owner=request.user, instance=entry)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Операция сохранена.")
+        return redirect("transaction_list")
+    return render(request, "cashflow/transaction_form.html", {"form": form})
+
+
+@login_required
+def transaction_delete(request, pk):
+    entry = get_object_or_404(CashTransaction, account__owner=request.user, pk=pk)
+    if request.method == "POST":
+        entry.delete()
+        messages.success(request, "Операция удалена.")
+        return redirect("transaction_list")
+    return render(request, "cashflow/confirm_delete.html", {"instance": entry.description})
