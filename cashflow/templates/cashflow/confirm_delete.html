@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block crumb %}<a href="{% url 'catalog' %}">Справочники</a> / Удаление{% endblock %}{% block content %}<section class="form-panel"><h1>Удалить запись?</h1><p>{{ instance }}</p><form method="post">{% csrf_token %}<div class="actions"><button class="button">Удалить</button><a href="{% url 'catalog' %}">Отмена</a></div></form></section>{% endblock %}

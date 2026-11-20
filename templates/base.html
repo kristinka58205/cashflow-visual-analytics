@@ -12,7 +12,7 @@
 <span class="brand-mark">т</span>поток<span class="brand-note">денежные потоки</span>
 </a>
 <nav aria-label="Главное меню">
-<a href="{% url 'home' %}">Главная</a>{% if user.is_authenticated %}<a href="{% url 'home' %}">Обзор</a>
+<a href="{% url 'home' %}">Главная</a>{% if user.is_authenticated %}<a href="{% url 'catalog' %}">Счета и статьи</a>
 <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">Выйти</button>
 </form>{% else %}<a href="{% url 'login' %}">Войти</a>
 <a class="button small" href="{% url 'register' %}">Создать аккаунт</a>{% endif %}</nav>
