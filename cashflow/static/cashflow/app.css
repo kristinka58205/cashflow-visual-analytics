@@ -72,3 +72,5 @@ input:focus,select:focus,textarea:focus{outline:3px solid #9bd5c5;outline-offset
 }
 
 @media(min-width:801px) and (max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+@media(max-width:800px){.header{align-items:flex-start;flex-direction:column}.header nav{flex-wrap:wrap;gap:12px 20px}}
