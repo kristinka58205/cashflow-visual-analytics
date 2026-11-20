@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Поток — финансовая аналитика{% endblock %}
+{% block content %}
+<section class="hero"><div><p class="eyebrow">ФИНАНСЫ КОМПАНИИ</p><h1>Деньги под<br>контролем.</h1><p class="lead">Соберите денежные потоки в одном месте. От поступления до расхода — с понятной картиной движения средств.</p>
+{% if user.is_authenticated %}<p>Ваше финансовое пространство: <strong>{{ user.username }}</strong>.</p>{% else %}<a class="button" href="{% url 'register' %}">Создать рабочее пространство</a><a class="inline-link" href="{% url 'login' %}">Войти</a>{% endif %}
+</div><aside class="intro-card"><p class="eyebrow">ПРИНЦИП РАБОТЫ</p><h2>От операций к решениям</h2><ol><li>Учитывайте счета и операции</li><li>Разделяйте поступления и расходы</li><li>Сопоставляйте план и результат</li></ol><p class="muted">Данные каждого пользователя разделены.</p></aside></section>
+{% endblock %}
