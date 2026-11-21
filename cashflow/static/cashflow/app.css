@@ -78,3 +78,5 @@ input:focus,select:focus,textarea:focus{outline:3px solid #9bd5c5;outline-offset
 .filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;margin-bottom:24px}.filter-grid p{margin:0}.filter-grid label{display:block;font-size:14px;font-weight:600;margin-bottom:5px}.filter-grid .errorlist,.filter-grid>.actions{grid-column:1/-1}
 
 .month-row{display:grid;grid-template-columns:90px minmax(0,1fr) minmax(130px,.5fr);gap:20px;padding:20px 0;border-top:1px solid var(--line)}.month-row p{margin:4px 0 12px}.money-bar{height:12px;border-radius:3px}.income-bar{background:#254ca0}.expense-bar{background:#b84739}.analysis-categories{margin-top:24px}.analysis-categories article{border-top:1px solid var(--line);padding:18px 0}.analysis-categories h3{margin:0 0 6px}@media(max-width:650px){.month-row{grid-template-columns:1fr;gap:8px}.stats strong{overflow-wrap:anywhere}}
+
+.invite-code{overflow-wrap:anywhere}.header nav{flex-wrap:wrap}.header{gap:24px}

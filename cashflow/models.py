@@ -5,6 +5,16 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 from decimal import Decimal
 from django.core.validators import RegexValidator
+import secrets
+from datetime import timedelta
+
+
+def invitation_token():
+    return secrets.token_urlsafe(32)
+
+
+def invitation_expiry():
+    return timezone.now()+timedelta(days=1)
 
 
 class BusinessReference(models.Model):
@@ -168,3 +178,14 @@ class OrganizationMembership(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["organization", "user"], name="organization_unique_member")]
+
+
+class OrganizationInvitation(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="invitations")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="finance_invitations_created")
+    token = models.CharField(max_length=64, unique=True, default=invitation_token, editable=False)
+    role = models.CharField(max_length=10, choices=[("editor", "Финансовый специалист"), ("viewer", "Руководитель (просмотр)")], default="viewer")
+    expires_at = models.DateTimeField(default=invitation_expiry)
+    revoked = models.BooleanField(default=False)
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="finance_invitations_accepted")
+    accepted_at = models.DateTimeField(null=True, blank=True)
