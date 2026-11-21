@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from .forms import PaymentForm, PaymentExecutionForm
 from .models import PlannedPayment, CashTransaction, BankAccount
 from .access import LedgerScope, get_scope, financial_write, write_scope
+from .audit import record_event
 
 
 @transaction.atomic
@@ -20,8 +21,10 @@ def save_payment(user, payment, scope=None):
             raise PermissionDenied
         if payment.pk and not scope.payments().filter(pk=payment.pk, status="planned").exists():
             raise ValidationError("Платёж уже проведён или отменён; изменение плана невозможно.")
+        action = "updated" if payment.pk else "created"
         payment.full_clean()
         payment.save()
+        record_event(scope, action, "planned_payment", payment.pk, f"{payment.description}: {payment.amount:.2f} ₽")
 
 
 @transaction.atomic
@@ -38,6 +41,8 @@ def execute_payment(user, pk, occurred_on, scope=None):
         entry.save()
         payment.status, payment.transaction = "paid", entry
         payment.save(update_fields=["status", "transaction"])
+        record_event(scope, "paid", "planned_payment", payment.pk, f"{payment.description}: {payment.amount:.2f} ₽")
+        record_event(scope, "created", "operation", entry.pk, f"Плановый платёж: {entry.description}")
         return entry
 
 
@@ -96,4 +101,5 @@ def payment_cancel(request, pk):
     if payment.status == "planned":
         payment.status = "cancelled"
         payment.save(update_fields=["status"])
+        record_event(get_scope(request), "cancelled", "planned_payment", payment.pk, payment.description)
     return redirect("payment_list")

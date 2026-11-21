@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from .models import BankAccount, CashCategory, Counterparty, CashProject, CashTransaction, ImportBatch
 from .access import LedgerScope, get_scope, financial_write, write_scope
+from .audit import record_event
 
 COLUMNS = ["date", "account", "category", "kind", "amount", "description", "counterparty", "project"]
 
@@ -90,6 +91,7 @@ def apply_import(user, pk, allow_repeats=False, scope=None):
             entry.save()
         batch.applied_at = timezone.now()
         batch.save(update_fields=["applied_at"])
+        record_event(scope, "imported", "import", batch.pk, f"{batch.filename}: {len(batch.rows)} операций")
         return len(batch.rows)
 
 
@@ -105,8 +107,10 @@ def import_upload(request):
         except ValidationError as exc:
             form.add_error("file", exc)
         else:
-            batch, _ = get_scope(request).imports().get_or_create(sha256=hashlib.sha256(contents).hexdigest(),
+            batch, created = get_scope(request).imports().get_or_create(sha256=hashlib.sha256(contents).hexdigest(),
                 defaults={"owner": request.user, "organization": get_scope(request).organization, "filename": Path(upload.name).name[:120], "rows": rows})
+            if created:
+                record_event(get_scope(request), "created", "import", batch.pk, f"{batch.filename}: предварительная проверка {len(rows)} строк")
             return redirect("import_preview", pk=batch.pk)
     batches = get_scope(request).imports().order_by("-pk")[:10]
     return render(request, "cashflow/import_upload.html", {"form": form, "batches": batches})

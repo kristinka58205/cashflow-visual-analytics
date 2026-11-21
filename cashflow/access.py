@@ -7,7 +7,7 @@ from django.db import transaction
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from .models import Organization, OrganizationMembership, BankAccount, CashCategory, Counterparty, CashProject, CashTransaction, PlannedPayment, ExpenseBudget, ImportBatch
+from .models import Organization, OrganizationMembership, BankAccount, CashCategory, Counterparty, CashProject, CashTransaction, PlannedPayment, ExpenseBudget, ImportBatch, LedgerEvent
 
 
 class LedgerScope:
@@ -55,6 +55,9 @@ class LedgerScope:
 
     def imports(self):
         return self.catalog(ImportBatch)
+
+    def events(self):
+        return LedgerEvent.objects.filter(organization=self.organization) if self.organization else LedgerEvent.objects.filter(organization__isnull=True, actor=self.user)
 
 
 def get_scope(request):

@@ -11,6 +11,7 @@ from .services import financial_summary, filtered_transactions, transaction_tota
 from django.core.paginator import Paginator
 from django.utils import timezone
 from .access import get_scope, financial_write
+from .audit import record_event
 
 
 def home(request):
@@ -69,7 +70,8 @@ def catalog_edit(request, kind, pk=None):
         if duplicates.exclude(pk=instance.pk).exists():
             form.add_error("name", "Такое название уже используется.")
         else:
-            form.save()
+            saved = form.save()
+            record_event(get_scope(request), "updated" if pk else "created", "catalog", saved.pk, f"{title}: {saved}")
             messages.success(request, "Изменения сохранены.")
             return redirect("catalog")
     return render(request, "cashflow/catalog_form.html", {"form": form, "heading": title})
@@ -81,11 +83,13 @@ def catalog_delete(request, kind, pk):
     model, _, _ = catalog_type(kind)
     instance = get_object_or_404(get_scope(request).catalog(model), pk=pk)
     if request.method == "POST":
+        object_id, summary = instance.pk, str(instance)
         try:
             instance.delete()
         except ProtectedError:
             messages.error(request, "Справочник используется в операциях и не может быть удалён.")
         else:
+            record_event(get_scope(request), "deleted", "catalog", object_id, summary)
             messages.success(request, "Запись удалена.")
         return redirect("catalog")
     return render(request, "cashflow/confirm_delete.html", {"instance": instance})
@@ -111,7 +115,8 @@ def transaction_edit(request, pk=None):
         return redirect("transaction_list")
     form = TransactionForm(request.POST if request.method == "POST" else None, owner=request.user, scope=get_scope(request), instance=entry)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        saved = form.save()
+        record_event(get_scope(request), "updated" if pk else "created", "operation", saved.pk, f"{saved.description}: {saved.amount:.2f} ₽")
         messages.success(request, "Операция сохранена.")
         return redirect("transaction_list")
     return render(request, "cashflow/transaction_form.html", {"form": form})
@@ -122,11 +127,13 @@ def transaction_edit(request, pk=None):
 def transaction_delete(request, pk):
     entry = get_object_or_404(get_scope(request).entries(), pk=pk)
     if request.method == "POST":
+        object_id, summary = entry.pk, f"{entry.description}: {entry.amount:.2f} ₽"
         try:
             entry.delete()
         except ProtectedError:
             messages.error(request, "Операция связана с проведённым платежом и сохраняется в истории.")
         else:
+            record_event(get_scope(request), "deleted", "operation", object_id, summary)
             messages.success(request, "Операция удалена.")
         return redirect("transaction_list")
     return render(request, "cashflow/confirm_delete.html", {"instance": entry.description})

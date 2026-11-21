@@ -206,3 +206,25 @@ class OrganizationInvitation(models.Model):
     revoked = models.BooleanField(default=False)
     accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="finance_invitations_accepted")
     accepted_at = models.DateTimeField(null=True, blank=True)
+
+
+class LedgerEvent(models.Model):
+    class Action(models.TextChoices):
+        CREATED = "created", "Создание"
+        UPDATED = "updated", "Изменение"
+        DELETED = "deleted", "Удаление"
+        PAID = "paid", "Проведение"
+        CANCELLED = "cancelled", "Отмена"
+        IMPORTED = "imported", "Импорт"
+
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, null=True, blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    actor_name = models.CharField(max_length=150)
+    action = models.CharField(max_length=12, choices=Action.choices)
+    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV")])
+    object_id = models.PositiveBigIntegerField()
+    summary = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
