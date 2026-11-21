@@ -1,5 +1,5 @@
 from django import forms
-from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, ExpenseBudget
+from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, ExpenseBudget, PlannedPayment
 from decimal import Decimal
 
 
@@ -34,7 +34,7 @@ class CategoryForm(OwnedForm):
 
     def clean_kind(self):
         kind = self.cleaned_data["kind"]
-        if self.instance.pk and (self.instance.transactions.exists() or self.instance.budgets.exists()):
+        if self.instance.pk and (self.instance.transactions.exists() or self.instance.budgets.exists() or self.instance.planned_payments.exists()):
             original = CashCategory.objects.get(pk=self.instance.pk).kind
             if kind != original:
                 raise forms.ValidationError("Направление статьи с операциями менять нельзя: создайте новую статью.")
@@ -77,6 +77,17 @@ class TransactionForm(forms.ModelForm):
         self.fields["category"].queryset = CashCategory.objects.filter(owner=owner)
         self.fields["counterparty"].queryset = Counterparty.objects.filter(owner=owner)
         self.fields["project"].queryset = CashProject.objects.filter(owner=owner)
+
+
+class PaymentForm(TransactionForm):
+    class Meta:
+        model = PlannedPayment
+        fields = ["account", "category", "counterparty", "project", "due_on", "amount", "description"]
+        widgets = {"due_on": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})}
+
+
+class PaymentExecutionForm(forms.Form):
+    occurred_on = forms.DateField(label="Фактическая дата", widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
 
 
 class TransactionFilterForm(forms.Form):

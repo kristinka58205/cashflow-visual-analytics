@@ -6,7 +6,7 @@ from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
-from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject
+from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, PlannedPayment
 from .services import financial_summary, filtered_transactions, transaction_totals, cashflow_analysis
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -102,6 +102,9 @@ def transaction_list(request):
 @login_required
 def transaction_edit(request, pk=None):
     entry = get_object_or_404(CashTransaction, account__owner=request.user, pk=pk) if pk else None
+    if entry and PlannedPayment.objects.filter(transaction=entry).exists():
+        messages.error(request, "Операция проведённого планового платежа защищена от прямого изменения.")
+        return redirect("transaction_list")
     form = TransactionForm(request.POST if request.method == "POST" else None, owner=request.user, instance=entry)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -114,8 +117,12 @@ def transaction_edit(request, pk=None):
 def transaction_delete(request, pk):
     entry = get_object_or_404(CashTransaction, account__owner=request.user, pk=pk)
     if request.method == "POST":
-        entry.delete()
-        messages.success(request, "Операция удалена.")
+        try:
+            entry.delete()
+        except ProtectedError:
+            messages.error(request, "Операция связана с проведённым платежом и сохраняется в истории.")
+        else:
+            messages.success(request, "Операция удалена.")
         return redirect("transaction_list")
     return render(request, "cashflow/confirm_delete.html", {"instance": entry.description})
 

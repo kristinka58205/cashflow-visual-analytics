@@ -104,3 +104,24 @@ class ExpenseBudget(models.Model):
             raise ValidationError({"category": "Выберите собственную статью расходов."})
         if self.month_start and self.month_start.day != 1:
             raise ValidationError({"month_start": "Месяц должен быть указан первым числом."})
+
+
+class PlannedPayment(models.Model):
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="planned_payments")
+    category = models.ForeignKey(CashCategory, on_delete=models.PROTECT, related_name="planned_payments")
+    counterparty = models.ForeignKey(Counterparty, on_delete=models.PROTECT, null=True, blank=True)
+    project = models.ForeignKey(CashProject, on_delete=models.PROTECT, null=True, blank=True)
+    due_on = models.DateField("Срок платежа")
+    amount = models.DecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    description = models.CharField("Назначение", max_length=500)
+    status = models.CharField(max_length=10, choices=[("planned", "В плане"), ("paid", "Оплачен"), ("cancelled", "Отменён")], default="planned")
+    transaction = models.OneToOneField(CashTransaction, on_delete=models.PROTECT, null=True, blank=True)
+
+    class Meta:
+        ordering = ["due_on", "pk"]
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name="planned_payment_positive"),
+            models.CheckConstraint(condition=(models.Q(status="paid", transaction__isnull=False) | models.Q(status__in=["planned", "cancelled"], transaction__isnull=True)), name="planned_payment_consistent")]
+
+    def clean(self):
+        CashTransaction(account_id=self.account_id, category_id=self.category_id,
+            counterparty_id=self.counterparty_id, project_id=self.project_id).clean()

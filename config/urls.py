@@ -3,6 +3,7 @@ from django.urls import include, path
 from cashflow import views
 from cashflow.exports import transaction_export
 from cashflow import budgets
+from cashflow import payments
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -10,6 +11,11 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
     path("analytics/", views.analytics, name="analytics"),
+    path("payments/", payments.payment_list, name="payment_list"),
+    path("payments/new/", payments.payment_edit, name="payment_create"),
+    path("payments/<int:pk>/edit/", payments.payment_edit, name="payment_edit"),
+    path("payments/<int:pk>/execute/", payments.payment_execute, name="payment_execute"),
+    path("payments/<int:pk>/cancel/", payments.payment_cancel, name="payment_cancel"),
     path("budgets/", budgets.budget_list, name="budget_list"),
     path("budgets/new/", budgets.budget_edit, name="budget_create"),
     path("budgets/<int:pk>/edit/", budgets.budget_edit, name="budget_edit"),
