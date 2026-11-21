@@ -87,3 +87,20 @@ class CashTransaction(models.Model):
                     raise ValidationError({field: "Выберите запись из собственных справочников."})
         if self.occurred_on and self.occurred_on > timezone.localdate():
             raise ValidationError({"occurred_on": "Будущий платёж относится к плану, а не к фактическим операциям."})
+
+
+class ExpenseBudget(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    category = models.ForeignKey(CashCategory, verbose_name="Статья расходов", on_delete=models.PROTECT, related_name="budgets")
+    month_start = models.DateField("Месяц")
+    limit = models.DecimalField("Лимит, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["owner", "category", "month_start"], name="budget_unique_category_month"),
+            models.CheckConstraint(condition=models.Q(limit__gt=0), name="budget_positive_limit")]
+
+    def clean(self):
+        if self.category_id and not CashCategory.objects.filter(pk=self.category_id, owner_id=self.owner_id, kind="expense").exists():
+            raise ValidationError({"category": "Выберите собственную статью расходов."})
+        if self.month_start and self.month_start.day != 1:
+            raise ValidationError({"month_start": "Месяц должен быть указан первым числом."})

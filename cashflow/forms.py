@@ -1,5 +1,5 @@
 from django import forms
-from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject
+from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, ExpenseBudget
 from decimal import Decimal
 
 
@@ -34,11 +34,34 @@ class CategoryForm(OwnedForm):
 
     def clean_kind(self):
         kind = self.cleaned_data["kind"]
-        if self.instance.pk and self.instance.transactions.exists():
+        if self.instance.pk and (self.instance.transactions.exists() or self.instance.budgets.exists()):
             original = CashCategory.objects.get(pk=self.instance.pk).kind
             if kind != original:
                 raise forms.ValidationError("Направление статьи с операциями менять нельзя: создайте новую статью.")
         return kind
+
+
+class BudgetForm(OwnedForm):
+    month_start = forms.DateField(label="Месяц", input_formats=["%Y-%m", "%Y-%m-%d"], widget=forms.DateInput(format="%Y-%m", attrs={"type": "month"}))
+
+    class Meta:
+        model = ExpenseBudget
+        fields = ["category", "month_start", "limit"]
+
+    def __init__(self, *args, owner, **kwargs):
+        super().__init__(*args, owner=owner, **kwargs)
+        self.fields["category"].queryset = CashCategory.objects.filter(owner=owner, kind="expense")
+
+    def clean(self):
+        values = super().clean()
+        if values.get("category") and values.get("month_start") and ExpenseBudget.objects.filter(owner=self.instance.owner,
+                category=values["category"], month_start=values["month_start"]).exclude(pk=self.instance.pk).exists():
+            self.add_error("category", "Лимит на эту статью и месяц уже задан.")
+        return values
+
+
+class BudgetMonthForm(forms.Form):
+    month = forms.DateField(label="Месяц", input_formats=["%Y-%m"], widget=forms.DateInput(format="%Y-%m", attrs={"type": "month"}))
 
 
 class TransactionForm(forms.ModelForm):
