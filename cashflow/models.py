@@ -125,3 +125,15 @@ class PlannedPayment(models.Model):
     def clean(self):
         CashTransaction(account_id=self.account_id, category_id=self.category_id,
             counterparty_id=self.counterparty_id, project_id=self.project_id).clean()
+
+
+class ImportBatch(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    filename = models.CharField(max_length=120)
+    sha256 = models.CharField(max_length=64)
+    rows = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    applied_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["owner", "sha256"], name="import_unique_owner_file")]

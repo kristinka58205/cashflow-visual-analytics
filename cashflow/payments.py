@@ -76,7 +76,7 @@ def payment_execute(request, pk):
         try:
             execute_payment(request.user, pk, **form.cleaned_data)
         except ValidationError as exc:
-            form.add_error(None, exc)
+            form.add_error(None, "; ".join(exc.messages))
         else:
             messages.success(request, "Платёж проведён однократно и включён в фактические операции.")
             return redirect("payment_list")
