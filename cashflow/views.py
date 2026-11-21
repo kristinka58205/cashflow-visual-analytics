@@ -5,9 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm
+from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm, TransactionFilterForm
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject
-from .services import financial_summary
+from .services import financial_summary, filtered_transactions, transaction_totals
 from django.core.paginator import Paginator
 from django.utils import timezone
 
@@ -90,9 +90,13 @@ def catalog_delete(request, kind, pk):
 
 @login_required
 def transaction_list(request):
-    entries = CashTransaction.objects.filter(account__owner=request.user).select_related("account", "category", "counterparty", "project")
+    form = TransactionFilterForm(request.GET, owner=request.user)
+    entries = filtered_transactions(request.user, form.cleaned_data) if form.is_valid() else CashTransaction.objects.none()
     page = Paginator(entries, 25).get_page(request.GET.get("page"))
-    return render(request, "cashflow/transactions.html", {"page": page})
+    params = request.GET.copy()
+    params.pop("page", None)
+    return render(request, "cashflow/transactions.html", {"page": page, "filters": form,
+        "totals": transaction_totals(entries), "page_query": params.urlencode()})
 
 
 @login_required

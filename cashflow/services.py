@@ -1,7 +1,29 @@
 """Денежная арифметика выполняется Decimal, без округлений float."""
 from decimal import Decimal
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from .models import BankAccount, CashCategory, CashTransaction
+
+
+def filtered_transactions(user, values):
+    entries = CashTransaction.objects.filter(account__owner=user).select_related("account", "category", "counterparty", "project")
+    for field in ["account", "category", "counterparty", "project"]:
+        if values.get(field):
+            entries = entries.filter(**{field: values[field]})
+    for field, lookup in [("start", "occurred_on__gte"), ("end", "occurred_on__lte"),
+                          ("minimum", "amount__gte"), ("maximum", "amount__lte"), ("kind", "category__kind")]:
+        if values.get(field) is not None and values.get(field) != "":
+            entries = entries.filter(**{lookup: values[field]})
+    if values.get("search"):
+        entries = entries.filter(Q(description__icontains=values["search"]) | Q(counterparty__name__icontains=values["search"]))
+    ordering = {"newest": "-occurred_on", "oldest": "occurred_on", "largest": "-amount", "smallest": "amount"}
+    return entries.order_by(ordering.get(values.get("order"), "-occurred_on"), "-pk")
+
+
+def transaction_totals(entries):
+    result = entries.aggregate(income=Sum("amount", filter=Q(category__kind="income")),
+                               expense=Sum("amount", filter=Q(category__kind="expense")))
+    result = {key: value or Decimal("0.00") for key, value in result.items()}
+    return {**result, "net": result["income"] - result["expense"]}
 
 
 def financial_summary(user, start=None, end=None):
