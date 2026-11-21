@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block crumb %}<a href="{% url 'organization_list' %}">Организации</a> / Настройка{% endblock %}{% block content %}<section class="form-panel"><h1>Организация</h1><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button">Сохранить</button> <a href="{% url 'organization_list' %}">Отмена</a></form></section>{% endblock %}

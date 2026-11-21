@@ -137,3 +137,34 @@ class ImportBatch(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["owner", "sha256"], name="import_unique_owner_file")]
+
+
+class Organization(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="owned_finance_organizations")
+    name = models.CharField("Название организации", max_length=120)
+    legal_name = models.CharField("Полное наименование", max_length=250, blank=True)
+    tax_id = models.CharField("ИНН", max_length=12, blank=True,
+        validators=[RegexValidator(r"^(?:[0-9]{10}|[0-9]{12})$", "Укажите 10 или 12 цифр либо оставьте поле пустым.")])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [models.UniqueConstraint(fields=["owner", "name"], name="organization_unique_owner_name")]
+
+    def __str__(self):
+        return self.name
+
+
+class OrganizationMembership(models.Model):
+    class Role(models.TextChoices):
+        ADMIN = "admin", "Администратор"
+        EDITOR = "editor", "Финансовый специалист"
+        VIEWER = "viewer", "Руководитель (просмотр)"
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="memberships")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="finance_memberships")
+    role = models.CharField(max_length=10, choices=Role.choices, default=Role.VIEWER)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["organization", "user"], name="organization_unique_member")]

@@ -5,6 +5,7 @@ from cashflow.exports import transaction_export
 from cashflow import budgets
 from cashflow import payments
 from cashflow import imports
+from cashflow import organizations
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -12,6 +13,10 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
     path("analytics/", views.analytics, name="analytics"),
+    path("organizations/", organizations.organization_list, name="organization_list"),
+    path("organizations/new/", organizations.organization_create, name="organization_create"),
+    path("organizations/<int:pk>/", organizations.organization_detail, name="organization_detail"),
+    path("organizations/<int:pk>/edit/", organizations.organization_edit, name="organization_edit"),
     path("imports/", imports.import_upload, name="import_upload"),
     path("imports/<int:pk>/", imports.import_preview, name="import_preview"),
     path("payments/", payments.payment_list, name="payment_list"),
