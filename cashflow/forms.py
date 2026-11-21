@@ -1,12 +1,17 @@
 from django import forms
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, ExpenseBudget, PlannedPayment
 from decimal import Decimal
+from .access import LedgerScope
 
 
 class OwnedForm(forms.ModelForm):
-    def __init__(self, *args, owner, **kwargs):
+    def __init__(self, *args, owner, scope=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.instance.owner = owner
+        self.scope = scope or LedgerScope(owner)
+        if not self.instance.pk:
+            self.instance.owner = owner
+            if hasattr(self.instance, "organization_id"):
+                self.instance.organization = self.scope.organization
 
 
 class AccountForm(OwnedForm):
@@ -48,14 +53,13 @@ class BudgetForm(OwnedForm):
         model = ExpenseBudget
         fields = ["category", "month_start", "limit"]
 
-    def __init__(self, *args, owner, **kwargs):
-        super().__init__(*args, owner=owner, **kwargs)
-        self.fields["category"].queryset = CashCategory.objects.filter(owner=owner, kind="expense")
+    def __init__(self, *args, owner, scope=None, **kwargs):
+        super().__init__(*args, owner=owner, scope=scope, **kwargs)
+        self.fields["category"].queryset = self.scope.catalog(CashCategory).filter(kind="expense")
 
     def clean(self):
         values = super().clean()
-        if values.get("category") and values.get("month_start") and ExpenseBudget.objects.filter(owner=self.instance.owner,
-                category=values["category"], month_start=values["month_start"]).exclude(pk=self.instance.pk).exists():
+        if values.get("category") and values.get("month_start") and ExpenseBudget.objects.filter(category=values["category"], month_start=values["month_start"]).exclude(pk=self.instance.pk).exists():
             self.add_error("category", "Лимит на эту статью и месяц уже задан.")
         return values
 
@@ -71,12 +75,11 @@ class TransactionForm(forms.ModelForm):
         labels = {"account": "Счёт", "category": "Статья"}
         widgets = {"occurred_on": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})}
 
-    def __init__(self, *args, owner, **kwargs):
+    def __init__(self, *args, owner, scope=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["account"].queryset = BankAccount.objects.filter(owner=owner)
-        self.fields["category"].queryset = CashCategory.objects.filter(owner=owner)
-        self.fields["counterparty"].queryset = Counterparty.objects.filter(owner=owner)
-        self.fields["project"].queryset = CashProject.objects.filter(owner=owner)
+        self.scope = scope or LedgerScope(owner)
+        for field, model in [("account", BankAccount), ("category", CashCategory), ("counterparty", Counterparty), ("project", CashProject)]:
+            self.fields[field].queryset = self.scope.catalog(model)
 
 
 class PaymentForm(TransactionForm):
@@ -103,10 +106,11 @@ class TransactionFilterForm(forms.Form):
     maximum = forms.DecimalField(label="Сумма до, ₽", max_digits=18, decimal_places=2, min_value=Decimal("0.01"), required=False)
     order = forms.ChoiceField(label="Сортировка", required=False, choices=[("newest", "Сначала новые"), ("oldest", "Сначала старые"), ("largest", "Сначала крупные"), ("smallest", "Сначала небольшие")])
 
-    def __init__(self, *args, owner, **kwargs):
+    def __init__(self, *args, owner, scope=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.scope = scope or LedgerScope(owner)
         for name, model in [("account", BankAccount), ("category", CashCategory), ("counterparty", Counterparty), ("project", CashProject)]:
-            self.fields[name].queryset = model.objects.filter(owner=owner)
+            self.fields[name].queryset = self.scope.catalog(model)
 
     def clean(self):
         values = super().clean()

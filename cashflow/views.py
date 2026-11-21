@@ -10,13 +10,14 @@ from .models import BankAccount, CashCategory, CashTransaction, Counterparty, Ca
 from .services import financial_summary, filtered_transactions, transaction_totals, cashflow_analysis
 from django.core.paginator import Paginator
 from django.utils import timezone
+from .access import get_scope, financial_write
 
 
 def home(request):
     if request.user.is_authenticated:
         today = timezone.localdate()
         start = today.replace(day=1)
-        return render(request, "cashflow/dashboard.html", {"summary": financial_summary(request.user, start, today), "start": start, "end": today})
+        return render(request, "cashflow/dashboard.html", {"summary": financial_summary(request.user, start, today, scope=get_scope(request)), "start": start, "end": today})
     return render(request, "cashflow/home.html")
 
 
@@ -33,11 +34,11 @@ def register(request):
 @login_required
 def catalog(request):
     return render(request, "cashflow/catalog.html", {
-        "accounts": BankAccount.objects.filter(owner=request.user),
-        "categories": CashCategory.objects.filter(owner=request.user),
+        "accounts": get_scope(request).catalog(BankAccount),
+        "categories": get_scope(request).catalog(CashCategory),
         "business_catalogs": [
-            {"kind": "counterparties", "title": "Контрагенты", "items": Counterparty.objects.filter(owner=request.user)},
-            {"kind": "projects", "title": "Проекты", "items": CashProject.objects.filter(owner=request.user)},
+            {"kind": "counterparties", "title": "Контрагенты", "items": get_scope(request).catalog(Counterparty)},
+            {"kind": "projects", "title": "Проекты", "items": get_scope(request).catalog(CashProject)},
         ],
     })
 
@@ -55,13 +56,14 @@ def catalog_type(kind):
 
 
 @login_required
+@financial_write
 def catalog_edit(request, kind, pk=None):
     model, form_class, title = catalog_type(kind)
-    instance = get_object_or_404(model, owner=request.user, pk=pk) if pk else model(owner=request.user)
-    form = form_class(request.POST if request.method == "POST" else None, owner=request.user, instance=instance)
+    instance = get_object_or_404(get_scope(request).catalog(model), pk=pk) if pk else model(owner=request.user, organization=get_scope(request).organization)
+    form = form_class(request.POST if request.method == "POST" else None, owner=request.user, scope=get_scope(request), instance=instance)
     if request.method == "POST" and form.is_valid():
         # Проверка уникальности с owner нужна до записи; owner не является полем формы.
-        duplicates = model.objects.filter(owner=request.user, name=form.cleaned_data["name"])
+        duplicates = get_scope(request).catalog(model).filter(name=form.cleaned_data["name"])
         if model is CashCategory:
             duplicates = duplicates.filter(kind=form.cleaned_data["kind"])
         if duplicates.exclude(pk=instance.pk).exists():
@@ -74,9 +76,10 @@ def catalog_edit(request, kind, pk=None):
 
 
 @login_required
+@financial_write
 def catalog_delete(request, kind, pk):
     model, _, _ = catalog_type(kind)
-    instance = get_object_or_404(model, owner=request.user, pk=pk)
+    instance = get_object_or_404(get_scope(request).catalog(model), pk=pk)
     if request.method == "POST":
         try:
             instance.delete()
@@ -90,8 +93,8 @@ def catalog_delete(request, kind, pk):
 
 @login_required
 def transaction_list(request):
-    form = TransactionFilterForm(request.GET, owner=request.user)
-    entries = filtered_transactions(request.user, form.cleaned_data) if form.is_valid() else CashTransaction.objects.none()
+    form = TransactionFilterForm(request.GET, owner=request.user, scope=get_scope(request))
+    entries = filtered_transactions(request.user, form.cleaned_data, scope=get_scope(request)) if form.is_valid() else CashTransaction.objects.none()
     page = Paginator(entries, 25).get_page(request.GET.get("page"))
     params = request.GET.copy()
     params.pop("page", None)
@@ -100,12 +103,13 @@ def transaction_list(request):
 
 
 @login_required
+@financial_write
 def transaction_edit(request, pk=None):
-    entry = get_object_or_404(CashTransaction, account__owner=request.user, pk=pk) if pk else None
+    entry = get_object_or_404(get_scope(request).entries(), pk=pk) if pk else None
     if entry and PlannedPayment.objects.filter(transaction=entry).exists():
         messages.error(request, "Операция проведённого планового платежа защищена от прямого изменения.")
         return redirect("transaction_list")
-    form = TransactionForm(request.POST if request.method == "POST" else None, owner=request.user, instance=entry)
+    form = TransactionForm(request.POST if request.method == "POST" else None, owner=request.user, scope=get_scope(request), instance=entry)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Операция сохранена.")
@@ -114,8 +118,9 @@ def transaction_edit(request, pk=None):
 
 
 @login_required
+@financial_write
 def transaction_delete(request, pk):
-    entry = get_object_or_404(CashTransaction, account__owner=request.user, pk=pk)
+    entry = get_object_or_404(get_scope(request).entries(), pk=pk)
     if request.method == "POST":
         try:
             entry.delete()
@@ -132,5 +137,5 @@ def analytics(request):
     today = timezone.localdate()
     values = request.GET if request.GET else {"start": today.replace(day=1), "end": today}
     form = AnalysisPeriodForm(values)
-    report = cashflow_analysis(request.user, **form.cleaned_data) if form.is_valid() else None
+    report = cashflow_analysis(request.user, scope=get_scope(request), **form.cleaned_data) if form.is_valid() else None
     return render(request, "cashflow/analytics.html", {"form": form, "report": report})

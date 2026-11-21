@@ -9,42 +9,43 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from .forms import PaymentForm, PaymentExecutionForm
-from .models import PlannedPayment, CashTransaction
+from .models import PlannedPayment, CashTransaction, BankAccount
+from .access import LedgerScope, get_scope, financial_write, write_scope
 
 
 @transaction.atomic
-def save_payment(user, payment):
-    get_user_model().objects.select_for_update().get(pk=user.pk)
-    if payment.account.owner_id != user.pk:
-        raise PermissionDenied
-    if payment.pk and not PlannedPayment.objects.filter(pk=payment.pk, account__owner=user, status="planned").exists():
-        raise ValidationError("Платёж уже проведён или отменён; изменение плана невозможно.")
-    payment.full_clean()
-    payment.save()
+def save_payment(user, payment, scope=None):
+    with write_scope(user, scope) as scope:
+        if not scope.catalog(BankAccount).filter(pk=payment.account_id).exists():
+            raise PermissionDenied
+        if payment.pk and not scope.payments().filter(pk=payment.pk, status="planned").exists():
+            raise ValidationError("Платёж уже проведён или отменён; изменение плана невозможно.")
+        payment.full_clean()
+        payment.save()
 
 
 @transaction.atomic
-def execute_payment(user, pk, occurred_on):
-    get_user_model().objects.select_for_update().get(pk=user.pk)
-    payment = get_object_or_404(PlannedPayment.objects.select_for_update(), pk=pk, account__owner=user)
-    if payment.status == "paid":
-        return payment.transaction
-    if payment.status != "planned":
-        raise ValidationError("Отменённый платёж нельзя провести.")
-    entry = CashTransaction(account=payment.account, category=payment.category, counterparty=payment.counterparty,
-        project=payment.project, amount=payment.amount, description=payment.description, occurred_on=occurred_on)
-    entry.full_clean()
-    entry.save()
-    payment.status, payment.transaction = "paid", entry
-    payment.save(update_fields=["status", "transaction"])
-    return entry
+def execute_payment(user, pk, occurred_on, scope=None):
+    with write_scope(user, scope) as scope:
+        payment = get_object_or_404(scope.payments().select_for_update(), pk=pk)
+        if payment.status == "paid":
+            return payment.transaction
+        if payment.status != "planned":
+            raise ValidationError("Отменённый платёж нельзя провести.")
+        entry = CashTransaction(account=payment.account, category=payment.category, counterparty=payment.counterparty,
+            project=payment.project, amount=payment.amount, description=payment.description, occurred_on=occurred_on)
+        entry.full_clean()
+        entry.save()
+        payment.status, payment.transaction = "paid", entry
+        payment.save(update_fields=["status", "transaction"])
+        return entry
 
 
 @login_required
 def payment_list(request):
     state = request.GET.get("state", "planned")
     state = state if state in {"planned", "paid", "cancelled", "all"} else "planned"
-    entries = PlannedPayment.objects.filter(account__owner=request.user).select_related("account", "category")
+    entries = get_scope(request).payments().select_related("account", "category")
     totals = {"income": Decimal("0.00"), "expense": Decimal("0.00")}
     for kind, amount in entries.filter(status="planned").values_list("category__kind", "amount"):
         totals[kind] += amount
@@ -55,12 +56,13 @@ def payment_list(request):
 
 
 @login_required
+@financial_write
 def payment_edit(request, pk=None):
-    instance = get_object_or_404(PlannedPayment, pk=pk, account__owner=request.user, status="planned") if pk else None
-    form = PaymentForm(request.POST if request.method == "POST" else None, instance=instance, owner=request.user)
+    instance = get_object_or_404(get_scope(request).payments(), pk=pk, status="planned") if pk else None
+    form = PaymentForm(request.POST if request.method == "POST" else None, instance=instance, owner=request.user, scope=get_scope(request))
     if request.method == "POST" and form.is_valid():
         try:
-            save_payment(request.user, form.save(commit=False))
+            save_payment(request.user, form.save(commit=False), scope=get_scope(request))
         except ValidationError as exc:
             form.add_error(None, exc)
         else:
@@ -69,12 +71,13 @@ def payment_edit(request, pk=None):
 
 
 @login_required
+@financial_write
 def payment_execute(request, pk):
-    payment = get_object_or_404(PlannedPayment, pk=pk, account__owner=request.user)
+    payment = get_object_or_404(get_scope(request).payments(), pk=pk)
     form = PaymentExecutionForm(request.POST if request.method == "POST" else None, initial={"occurred_on": timezone.localdate()})
     if request.method == "POST" and form.is_valid():
         try:
-            execute_payment(request.user, pk, **form.cleaned_data)
+            execute_payment(request.user, pk, scope=get_scope(request), **form.cleaned_data)
         except ValidationError as exc:
             form.add_error(None, "; ".join(exc.messages))
         else:
@@ -85,10 +88,11 @@ def payment_execute(request, pk):
 
 @login_required
 @require_POST
+@financial_write
 @transaction.atomic
 def payment_cancel(request, pk):
     get_user_model().objects.select_for_update().get(pk=request.user.pk)
-    payment = get_object_or_404(PlannedPayment, pk=pk, account__owner=request.user)
+    payment = get_object_or_404(get_scope(request).payments(), pk=pk)
     if payment.status == "planned":
         payment.status = "cancelled"
         payment.save(update_fields=["status"])

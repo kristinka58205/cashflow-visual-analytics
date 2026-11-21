@@ -6,6 +6,7 @@ from cashflow import budgets
 from cashflow import payments
 from cashflow import imports
 from cashflow import organizations
+from cashflow.access import workspace_select
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -13,6 +14,7 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
     path("analytics/", views.analytics, name="analytics"),
+    path("workspace/<int:pk>/", workspace_select, name="workspace_select"),
     path("organizations/", organizations.organization_list, name="organization_list"),
     path("organizations/new/", organizations.organization_create, name="organization_create"),
     path("organizations/join/", organizations.organization_join, name="organization_join"),

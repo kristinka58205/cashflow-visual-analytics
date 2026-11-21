@@ -17,15 +17,23 @@ def invitation_expiry():
     return timezone.now()+timedelta(days=1)
 
 
+def same_ledger(first, second):
+    if first["organization_id"] is not None:
+        return first["organization_id"] == second["organization_id"]
+    return second["organization_id"] is None and first["owner_id"] == second["owner_id"]
+
+
 class BusinessReference(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField("Название", max_length=120)
     description = models.TextField("Описание", max_length=1000, blank=True)
 
     class Meta:
         abstract = True
         ordering = ["name"]
-        constraints = [models.UniqueConstraint(fields=["owner", "name"], name="%(class)s_unique_owner_name")]
+        constraints = [models.UniqueConstraint(fields=["owner", "name"], condition=models.Q(organization__isnull=True), name="%(class)s_personal_name"),
+            models.UniqueConstraint(fields=["organization", "name"], condition=models.Q(organization__isnull=False), name="%(class)s_organization_name")]
 
     def __str__(self):
         return self.name
@@ -41,14 +49,16 @@ class CashProject(BusinessReference):
 
 
 class BankAccount(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField("Название счёта", max_length=120)
     opening_balance = models.DecimalField("Начальный остаток, ₽", max_digits=18, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["name"]
-        constraints = [models.UniqueConstraint(fields=["owner", "name"], name="account_unique_name_per_owner")]
+        constraints = [models.UniqueConstraint(fields=["owner", "name"], condition=models.Q(organization__isnull=True), name="account_unique_personal_name"),
+            models.UniqueConstraint(fields=["organization", "name"], condition=models.Q(organization__isnull=False), name="account_unique_organization_name")]
 
     def __str__(self):
         return self.name
@@ -59,13 +69,15 @@ class CashCategory(models.Model):
         INCOME = "income", "Поступление"
         EXPENSE = "expense", "Расход"
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField("Статья", max_length=120)
     kind = models.CharField("Направление", max_length=10, choices=Kind.choices)
 
     class Meta:
         ordering = ["kind", "name"]
-        constraints = [models.UniqueConstraint(fields=["owner", "name", "kind"], name="category_unique_per_owner_kind")]
+        constraints = [models.UniqueConstraint(fields=["owner", "name", "kind"], condition=models.Q(organization__isnull=True), name="category_unique_personal_name"),
+            models.UniqueConstraint(fields=["organization", "name", "kind"], condition=models.Q(organization__isnull=False), name="category_unique_organization_name")]
 
     def __str__(self):
         return f"{self.name} ({self.get_kind_display()})"
@@ -87,31 +99,34 @@ class CashTransaction(models.Model):
 
     def clean(self):
         if self.account_id and self.category_id:
-            account_owner = BankAccount.objects.filter(pk=self.account_id).values_list("owner_id", flat=True).first()
-            category_owner = CashCategory.objects.filter(pk=self.category_id).values_list("owner_id", flat=True).first()
-            if account_owner != category_owner:
-                raise ValidationError("Счёт и статья должны принадлежать одному пользователю.")
+            account = BankAccount.objects.filter(pk=self.account_id).values("owner_id", "organization_id").first()
+            category = CashCategory.objects.filter(pk=self.category_id).values("owner_id", "organization_id").first()
+            if account and category and not same_ledger(account, category):
+                raise ValidationError("Счёт и статья должны относиться к одной рабочей области.")
             for field, model in [("counterparty", Counterparty), ("project", CashProject)]:
                 reference_id = getattr(self, field + "_id")
-                if reference_id and not model.objects.filter(pk=reference_id, owner_id=account_owner).exists():
-                    raise ValidationError({field: "Выберите запись из собственных справочников."})
+                reference = model.objects.filter(pk=reference_id).values("owner_id", "organization_id").first() if reference_id else None
+                if account and reference and not same_ledger(account, reference):
+                    raise ValidationError({field: "Выберите запись из той же рабочей области."})
         if self.occurred_on and self.occurred_on > timezone.localdate():
             raise ValidationError({"occurred_on": "Будущий платёж относится к плану, а не к фактическим операциям."})
 
 
 class ExpenseBudget(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     category = models.ForeignKey(CashCategory, verbose_name="Статья расходов", on_delete=models.PROTECT, related_name="budgets")
     month_start = models.DateField("Месяц")
     limit = models.DecimalField("Лимит, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["owner", "category", "month_start"], name="budget_unique_category_month"),
+        constraints = [models.UniqueConstraint(fields=["category", "month_start"], name="budget_unique_category_month"),
             models.CheckConstraint(condition=models.Q(limit__gt=0), name="budget_positive_limit")]
 
     def clean(self):
-        if self.category_id and not CashCategory.objects.filter(pk=self.category_id, owner_id=self.owner_id, kind="expense").exists():
-            raise ValidationError({"category": "Выберите собственную статью расходов."})
+        if self.category_id:
+            category = CashCategory.objects.filter(pk=self.category_id, kind="expense").first()
+            if not category or (category.organization_id is None and category.owner_id != self.owner_id):
+                raise ValidationError({"category": "Выберите статью расходов своей рабочей области."})
         if self.month_start and self.month_start.day != 1:
             raise ValidationError({"month_start": "Месяц должен быть указан первым числом."})
 
@@ -138,7 +153,8 @@ class PlannedPayment(models.Model):
 
 
 class ImportBatch(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     filename = models.CharField(max_length=120)
     sha256 = models.CharField(max_length=64)
     rows = models.JSONField()
@@ -146,7 +162,8 @@ class ImportBatch(models.Model):
     applied_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["owner", "sha256"], name="import_unique_owner_file")]
+        constraints = [models.UniqueConstraint(fields=["owner", "sha256"], condition=models.Q(organization__isnull=True), name="import_unique_personal_file"),
+            models.UniqueConstraint(fields=["organization", "sha256"], condition=models.Q(organization__isnull=False), name="import_unique_organization_file")]
 
 
 class Organization(models.Model):

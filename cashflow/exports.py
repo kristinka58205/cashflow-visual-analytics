@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 from .forms import TransactionFilterForm
 from .services import filtered_transactions
+from .access import get_scope
 
 
 def spreadsheet_text(value):
@@ -18,10 +19,10 @@ class CsvBuffer:
 
 @login_required
 def transaction_export(request):
-    form = TransactionFilterForm(request.GET, owner=request.user)
+    form = TransactionFilterForm(request.GET, owner=request.user, scope=get_scope(request))
     if not form.is_valid():
         return HttpResponseBadRequest(form.errors.as_text(), content_type="text/plain; charset=utf-8")
-    entries = filtered_transactions(request.user, form.cleaned_data)
+    entries = filtered_transactions(request.user, form.cleaned_data, scope=get_scope(request))
     def rows():
         writer = csv.writer(CsvBuffer(), delimiter=";", lineterminator="\n")
         yield "\ufeff"

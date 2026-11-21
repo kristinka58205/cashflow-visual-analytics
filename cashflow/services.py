@@ -3,10 +3,12 @@ from decimal import Decimal
 from django.db.models import Sum, Q
 from .models import BankAccount, CashCategory, CashTransaction
 from datetime import date
+from .access import LedgerScope
 
 
-def cashflow_analysis(user, start, end):
-    summary = financial_summary(user, start, end)
+def cashflow_analysis(user, start, end, scope=None):
+    scope = scope or LedgerScope(user)
+    summary = financial_summary(user, start, end, scope=scope)
     monthly = {}
     cursor = start.replace(day=1)
     while cursor <= end:
@@ -15,7 +17,7 @@ def cashflow_analysis(user, start, end):
             break
         cursor = date(cursor.year + (cursor.month == 12), cursor.month % 12 + 1, 1)
     categories = {}
-    entries = CashTransaction.objects.filter(account__owner=user, occurred_on__range=(start, end))
+    entries = scope.entries().filter(occurred_on__range=(start, end))
     for entry in entries.values("occurred_on", "category_id", "category__name", "category__kind", "amount"):
         kind = entry["category__kind"]
         monthly[entry["occurred_on"].replace(day=1)][kind] += entry["amount"]
@@ -37,8 +39,9 @@ def cashflow_analysis(user, start, end):
         "categories": sorted(categories.values(), key=lambda item: (-item["amount"], item["name"]))}
 
 
-def filtered_transactions(user, values):
-    entries = CashTransaction.objects.filter(account__owner=user).select_related("account", "category", "counterparty", "project")
+def filtered_transactions(user, values, scope=None):
+    scope = scope or LedgerScope(user)
+    entries = scope.entries().select_related("account", "category", "counterparty", "project")
     for field in ["account", "category", "counterparty", "project"]:
         if values.get(field):
             entries = entries.filter(**{field: values[field]})
@@ -59,17 +62,18 @@ def transaction_totals(entries):
     return {**result, "net": result["income"] - result["expense"]}
 
 
-def financial_summary(user, start=None, end=None):
-    entries = CashTransaction.objects.filter(account__owner=user)
+def financial_summary(user, start=None, end=None, scope=None):
+    scope = scope or LedgerScope(user)
+    entries = scope.entries()
     if start:
         entries = entries.filter(occurred_on__gte=start)
     if end:
         entries = entries.filter(occurred_on__lte=end)
     income = entries.filter(category__kind=CashCategory.Kind.INCOME).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
     expense = entries.filter(category__kind=CashCategory.Kind.EXPENSE).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-    opening = BankAccount.objects.filter(owner=user).aggregate(total=Sum("opening_balance"))["total"] or Decimal("0.00")
+    opening = scope.catalog(BankAccount).aggregate(total=Sum("opening_balance"))["total"] or Decimal("0.00")
     if start:
-        before = CashTransaction.objects.filter(account__owner=user, occurred_on__lt=start)
+        before = scope.entries().filter(occurred_on__lt=start)
         opening += before.filter(category__kind="income").aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
         opening -= before.filter(category__kind="expense").aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
     return {"income": income, "expense": expense, "net": income-expense, "opening": opening, "closing": opening+income-expense}
