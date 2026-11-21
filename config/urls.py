@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 from cashflow import views
+from cashflow.exports import transaction_export
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -13,6 +14,7 @@ urlpatterns = [
     path("catalog/<str:kind>/<int:pk>/edit/", views.catalog_edit, name="catalog_edit"),
     path("catalog/<str:kind>/<int:pk>/delete/", views.catalog_delete, name="catalog_delete"),
     path("operations/", views.transaction_list, name="transaction_list"),
+    path("operations/export/", transaction_export, name="transaction_export"),
     path("operations/new/", views.transaction_edit, name="transaction_create"),
     path("operations/<int:pk>/edit/", views.transaction_edit, name="transaction_edit"),
     path("operations/<int:pk>/delete/", views.transaction_delete, name="transaction_delete"),
