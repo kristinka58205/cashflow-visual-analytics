@@ -81,3 +81,18 @@ class TransactionFilterForm(forms.Form):
         if values.get("minimum") is not None and values.get("maximum") is not None and values["minimum"] > values["maximum"]:
             self.add_error("maximum", "Верхняя граница должна быть не меньше нижней.")
         return values
+
+
+class AnalysisPeriodForm(forms.Form):
+    start = forms.DateField(label="Начало периода", widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
+    end = forms.DateField(label="Конец периода", widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
+
+    def clean(self):
+        values = super().clean()
+        if values.get("start") and values.get("end"):
+            days = (values["end"] - values["start"]).days
+            if days < 0:
+                self.add_error("end", "Конец периода должен быть не раньше начала.")
+            elif days > 366:
+                self.add_error("end", "Выберите период не длиннее 367 дней.")
+        return values

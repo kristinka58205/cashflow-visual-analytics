@@ -7,6 +7,7 @@ urlpatterns = [
     path("accounts/register/", views.register, name="register"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
+    path("analytics/", views.analytics, name="analytics"),
     path("catalog/", views.catalog, name="catalog"),
     path("catalog/<str:kind>/new/", views.catalog_edit, name="catalog_create"),
     path("catalog/<str:kind>/<int:pk>/edit/", views.catalog_edit, name="catalog_edit"),

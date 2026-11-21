@@ -5,9 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm, TransactionFilterForm
+from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject
-from .services import financial_summary, filtered_transactions, transaction_totals
+from .services import financial_summary, filtered_transactions, transaction_totals, cashflow_analysis
 from django.core.paginator import Paginator
 from django.utils import timezone
 
@@ -118,3 +118,12 @@ def transaction_delete(request, pk):
         messages.success(request, "Операция удалена.")
         return redirect("transaction_list")
     return render(request, "cashflow/confirm_delete.html", {"instance": entry.description})
+
+
+@login_required
+def analytics(request):
+    today = timezone.localdate()
+    values = request.GET if request.GET else {"start": today.replace(day=1), "end": today}
+    form = AnalysisPeriodForm(values)
+    report = cashflow_analysis(request.user, **form.cleaned_data) if form.is_valid() else None
+    return render(request, "cashflow/analytics.html", {"form": form, "report": report})

@@ -2,6 +2,39 @@
 from decimal import Decimal
 from django.db.models import Sum, Q
 from .models import BankAccount, CashCategory, CashTransaction
+from datetime import date
+
+
+def cashflow_analysis(user, start, end):
+    summary = financial_summary(user, start, end)
+    monthly = {}
+    cursor = start.replace(day=1)
+    while cursor <= end:
+        monthly[cursor] = {"month": cursor, "income": Decimal("0.00"), "expense": Decimal("0.00")}
+        if (cursor.year, cursor.month) == (end.year, end.month):
+            break
+        cursor = date(cursor.year + (cursor.month == 12), cursor.month % 12 + 1, 1)
+    categories = {}
+    entries = CashTransaction.objects.filter(account__owner=user, occurred_on__range=(start, end))
+    for entry in entries.values("occurred_on", "category_id", "category__name", "category__kind", "amount"):
+        kind = entry["category__kind"]
+        monthly[entry["occurred_on"].replace(day=1)][kind] += entry["amount"]
+        item = categories.setdefault(entry["category_id"], {"name": entry["category__name"], "kind": kind, "amount": Decimal("0.00"), "count": 0})
+        item["amount"] += entry["amount"]
+        item["count"] += 1
+    peak = max((max(item["income"], item["expense"]) for item in monthly.values()), default=Decimal("0"))
+    balance = summary["opening"]
+    for item in monthly.values():
+        item["net"] = item["income"] - item["expense"]
+        balance += item["net"]
+        item["closing"] = balance
+        for kind in ["income", "expense"]:
+            item[kind + "_width"] = f"{item[kind] * 100 / peak:.2f}" if peak else "0"
+    for item in categories.values():
+        total = summary[item["kind"]]
+        item["share"] = item["amount"] * 100 / total if total else Decimal("0")
+    return {"summary": summary, "months": list(monthly.values()),
+        "categories": sorted(categories.values(), key=lambda item: (-item["amount"], item["name"]))}
 
 
 def filtered_transactions(user, values):
