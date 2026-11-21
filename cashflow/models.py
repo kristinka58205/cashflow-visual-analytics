@@ -4,6 +4,30 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from decimal import Decimal
+from django.core.validators import RegexValidator
+
+
+class BusinessReference(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    name = models.CharField("Название", max_length=120)
+    description = models.TextField("Описание", max_length=1000, blank=True)
+
+    class Meta:
+        abstract = True
+        ordering = ["name"]
+        constraints = [models.UniqueConstraint(fields=["owner", "name"], name="%(class)s_unique_owner_name")]
+
+    def __str__(self):
+        return self.name
+
+
+class Counterparty(BusinessReference):
+    tax_id = models.CharField("ИНН", max_length=12, blank=True,
+        validators=[RegexValidator(r"^(?:[0-9]{10}|[0-9]{12})$", "Укажите 10 или 12 цифр либо оставьте поле пустым.")])
+
+
+class CashProject(BusinessReference):
+    code = models.CharField("Внутренний код", max_length=32, blank=True)
 
 
 class BankAccount(models.Model):
@@ -40,6 +64,8 @@ class CashCategory(models.Model):
 class CashTransaction(models.Model):
     account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="transactions")
     category = models.ForeignKey(CashCategory, on_delete=models.PROTECT, related_name="transactions")
+    counterparty = models.ForeignKey(Counterparty, verbose_name="Контрагент", on_delete=models.PROTECT, null=True, blank=True, related_name="transactions")
+    project = models.ForeignKey(CashProject, verbose_name="Проект", on_delete=models.PROTECT, null=True, blank=True, related_name="transactions")
     occurred_on = models.DateField("Дата операции", default=timezone.localdate)
     amount = models.DecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     description = models.CharField("Назначение платежа", max_length=500)
@@ -55,5 +81,9 @@ class CashTransaction(models.Model):
             category_owner = CashCategory.objects.filter(pk=self.category_id).values_list("owner_id", flat=True).first()
             if account_owner != category_owner:
                 raise ValidationError("Счёт и статья должны принадлежать одному пользователю.")
+            for field, model in [("counterparty", Counterparty), ("project", CashProject)]:
+                reference_id = getattr(self, field + "_id")
+                if reference_id and not model.objects.filter(pk=reference_id, owner_id=account_owner).exists():
+                    raise ValidationError({field: "Выберите запись из собственных справочников."})
         if self.occurred_on and self.occurred_on > timezone.localdate():
             raise ValidationError({"occurred_on": "Будущий платёж относится к плану, а не к фактическим операциям."})

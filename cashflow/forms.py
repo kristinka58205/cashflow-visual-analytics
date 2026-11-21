@@ -1,5 +1,5 @@
 from django import forms
-from .models import BankAccount, CashCategory, CashTransaction
+from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject
 
 
 class OwnedForm(forms.ModelForm):
@@ -12,6 +12,18 @@ class AccountForm(OwnedForm):
     class Meta:
         model = BankAccount
         fields = ["name", "opening_balance"]
+
+
+class CounterpartyForm(OwnedForm):
+    class Meta:
+        model = Counterparty
+        fields = ["name", "tax_id", "description"]
+
+
+class ProjectForm(OwnedForm):
+    class Meta:
+        model = CashProject
+        fields = ["name", "code", "description"]
 
 
 class CategoryForm(OwnedForm):
@@ -31,7 +43,7 @@ class CategoryForm(OwnedForm):
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = CashTransaction
-        fields = ["account", "category", "occurred_on", "amount", "description"]
+        fields = ["account", "category", "counterparty", "project", "occurred_on", "amount", "description"]
         labels = {"account": "Счёт", "category": "Статья"}
         widgets = {"occurred_on": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})}
 
@@ -39,3 +51,5 @@ class TransactionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["account"].queryset = BankAccount.objects.filter(owner=owner)
         self.fields["category"].queryset = CashCategory.objects.filter(owner=owner)
+        self.fields["counterparty"].queryset = Counterparty.objects.filter(owner=owner)
+        self.fields["project"].queryset = CashProject.objects.filter(owner=owner)

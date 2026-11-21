@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm, TransactionForm
-from .models import BankAccount, CashCategory, CashTransaction
+from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm
+from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject
 from .services import financial_summary
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -35,6 +35,10 @@ def catalog(request):
     return render(request, "cashflow/catalog.html", {
         "accounts": BankAccount.objects.filter(owner=request.user),
         "categories": CashCategory.objects.filter(owner=request.user),
+        "business_catalogs": [
+            {"kind": "counterparties", "title": "Контрагенты", "items": Counterparty.objects.filter(owner=request.user)},
+            {"kind": "projects", "title": "Проекты", "items": CashProject.objects.filter(owner=request.user)},
+        ],
     })
 
 
@@ -43,6 +47,10 @@ def catalog_type(kind):
         return BankAccount, AccountForm, "Счёт"
     if kind == "categories":
         return CashCategory, CategoryForm, "Статья"
+    if kind == "counterparties":
+        return Counterparty, CounterpartyForm, "Контрагент"
+    if kind == "projects":
+        return CashProject, ProjectForm, "Проект"
     raise Http404
 
 
@@ -82,7 +90,7 @@ def catalog_delete(request, kind, pk):
 
 @login_required
 def transaction_list(request):
-    entries = CashTransaction.objects.filter(account__owner=request.user).select_related("account", "category")
+    entries = CashTransaction.objects.filter(account__owner=request.user).select_related("account", "category", "counterparty", "project")
     page = Paginator(entries, 25).get_page(request.GET.get("page"))
     return render(request, "cashflow/transactions.html", {"page": page})
 
