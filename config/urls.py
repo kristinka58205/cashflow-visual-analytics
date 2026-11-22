@@ -15,13 +15,18 @@ from cashflow.feedback import feedback, feedback_queue
 
 from cashflow import receipts
 
+from cashflow.cabinet import cabinet, account_action
+
 urlpatterns = [
+    path("cabinet/", cabinet, name="cabinet_home"),
+    path("cabinet/accounts/action/", account_action, name="account_action"),
+    path("cabinet/feedback/", feedback_queue, name="feedback_queue"),
+    path("cabinet/<slug:section>/", cabinet, name="cabinet"),
     path("operations/<int:pk>/receipts/", receipts.receipt_list, name="receipt_list"),
     path("operations/<int:pk>/receipts/upload/", receipts.receipt_upload, name="receipt_upload"),
     path("receipts/<int:pk>/download/", receipts.receipt_download, name="receipt_download"),
     path("receipts/<int:pk>/delete/", receipts.receipt_delete, name="receipt_delete"),
     path("feedback/", feedback, name="feedback"),
-    path("cabinet/feedback/", feedback_queue, name="feedback_queue"),
     path("guide/<slug:slug>/", guide, name="guide"),
     path("admin/", admin.site.urls),
     path("accounts/register/", views.register, name="register"),

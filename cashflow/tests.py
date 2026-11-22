@@ -99,7 +99,7 @@ class TransactionTests(TestCase):
         self.post_entry()
         entry = CashTransaction.objects.get()
         self.client.force_login(self.other)
-        self.assertNotContains(self.client.get(reverse("transaction_list")), "Платёж")
+        self.assertEqual(self.client.get(reverse("transaction_list")).context["page"].paginator.count, 0)
         for action in ["transaction_edit", "transaction_delete"]:
             self.assertEqual(self.client.post(reverse(action, args=[entry.pk]), {}).status_code, 404)
         self.assertEqual(financial_summary(self.other)["income"], Decimal("0.00"))

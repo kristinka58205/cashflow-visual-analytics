@@ -26,7 +26,7 @@
 </nav>
 {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
 <footer class="footer">
-<span>Поток · финансовая аналитика · <a href="{% url 'feedback' %}">Обратная связь</a>{% if user.is_staff %} · <a href="{% url 'feedback_queue' %}">Обращения</a>{% endif %}</span>
+<span>Поток · финансовая аналитика · <a href="{% url 'feedback' %}">Обратная связь</a>{% if user.is_staff %} · <a href="{% url 'cabinet_home' %}">Администрирование</a>{% endif %}</span>
 <span>Жукова Кристина Дмитриевна</span>
 </footer>
 </body>
