@@ -11,7 +11,11 @@ from cashflow.audit import audit_list, audit_export
 
 from cashflow.public import guide
 
+from cashflow.feedback import feedback, feedback_queue
+
 urlpatterns = [
+    path("feedback/", feedback, name="feedback"),
+    path("cabinet/feedback/", feedback_queue, name="feedback_queue"),
     path("guide/<slug:slug>/", guide, name="guide"),
     path("admin/", admin.site.urls),
     path("accounts/register/", views.register, name="register"),

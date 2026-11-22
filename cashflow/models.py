@@ -228,3 +228,16 @@ class LedgerEvent(models.Model):
 
     class Meta:
         ordering = ["-created_at", "-pk"]
+
+
+class Feedback(models.Model):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    subject = models.CharField("Тема", max_length=160)
+    email = models.EmailField("Почта для ответа", blank=True)
+    message = models.TextField("Сообщение", max_length=4000)
+    status = models.CharField("Статус", max_length=12, default="new", choices=[("new", "Новое"), ("review", "В работе"), ("closed", "Закрыто")])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
