@@ -17,7 +17,10 @@ from cashflow import receipts
 
 from cashflow.cabinet import cabinet, account_action
 
+from cashflow.documents import cashflow_pdf
+
 urlpatterns = [
+    path("reports/cashflow.pdf", cashflow_pdf, name="cashflow_pdf"),
     path("cabinet/", cabinet, name="cabinet_home"),
     path("cabinet/accounts/action/", account_action, name="account_action"),
     path("cabinet/feedback/", feedback_queue, name="feedback_queue"),

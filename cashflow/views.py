@@ -145,4 +145,4 @@ def analytics(request):
     values = request.GET if request.GET else {"start": today.replace(day=1), "end": today}
     form = AnalysisPeriodForm(values)
     report = cashflow_analysis(request.user, scope=get_scope(request), **form.cleaned_data) if form.is_valid() else None
-    return render(request, "cashflow/analytics.html", {"form": form, "report": report})
+    return render(request, "cashflow/analytics.html", {"form": form, "report": report, "report_start": form.cleaned_data.get("start"), "report_end": form.cleaned_data.get("end")})
