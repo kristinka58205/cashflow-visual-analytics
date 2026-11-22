@@ -17,6 +17,7 @@
 </form>{% else %}<a href="{% url 'login' %}">Войти</a>
 <a class="button small" href="{% url 'register' %}">Создать аккаунт</a>{% endif %}</nav>
 </header>
+<nav class="container guide-menu" aria-label="Руководство">{% for item in public_guides %}<a href="{% url 'guide' item.0 %}">{{ item.1 }}</a> {% endfor %}</nav>
 <main class="container">{% if user.is_authenticated %}{% if ledger %}<aside class="notice"><strong>{{ ledger.name }}</strong> · {{ ledger.role_label }} · <a href="{% url 'organization_list' %}">Сменить рабочую область</a></aside>{% elif ledger_access_lost %}<aside class="notice">Доступ к выбранной организации закрыт. <a href="{% url 'organization_list' %}">Выберите другую рабочую область</a>.</aside>{% endif %}{% endif %}
 <nav class="breadcrumbs" aria-label="Хлебные крошки">
 <a href="{% url 'home' %}">Поток</a>

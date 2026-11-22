@@ -9,7 +9,10 @@ from cashflow import organizations
 from cashflow.access import workspace_select
 from cashflow.audit import audit_list, audit_export
 
+from cashflow.public import guide
+
 urlpatterns = [
+    path("guide/<slug:slug>/", guide, name="guide"),
     path("admin/", admin.site.urls),
     path("accounts/register/", views.register, name="register"),
     path("accounts/", include("django.contrib.auth.urls")),

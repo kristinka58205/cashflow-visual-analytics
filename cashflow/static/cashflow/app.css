@@ -80,3 +80,5 @@ input:focus,select:focus,textarea:focus{outline:3px solid #9bd5c5;outline-offset
 .month-row{display:grid;grid-template-columns:90px minmax(0,1fr) minmax(130px,.5fr);gap:20px;padding:20px 0;border-top:1px solid var(--line)}.month-row p{margin:4px 0 12px}.money-bar{height:12px;border-radius:3px}.income-bar{background:#254ca0}.expense-bar{background:#b84739}.analysis-categories{margin-top:24px}.analysis-categories article{border-top:1px solid var(--line);padding:18px 0}.analysis-categories h3{margin:0 0 6px}@media(max-width:650px){.month-row{grid-template-columns:1fr;gap:8px}.stats strong{overflow-wrap:anywhere}}
 
 .invite-code{overflow-wrap:anywhere}.header nav{flex-wrap:wrap}.header{gap:24px}
+
+.guide-menu{display:flex;flex-wrap:wrap;gap:.65rem;padding-block:1rem}.guide-menu a{font-size:.85rem}.panel p{max-width:75ch;line-height:1.7}
