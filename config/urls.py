@@ -13,7 +13,13 @@ from cashflow.public import guide
 
 from cashflow.feedback import feedback, feedback_queue
 
+from cashflow import receipts
+
 urlpatterns = [
+    path("operations/<int:pk>/receipts/", receipts.receipt_list, name="receipt_list"),
+    path("operations/<int:pk>/receipts/upload/", receipts.receipt_upload, name="receipt_upload"),
+    path("receipts/<int:pk>/download/", receipts.receipt_download, name="receipt_download"),
+    path("receipts/<int:pk>/delete/", receipts.receipt_delete, name="receipt_delete"),
     path("feedback/", feedback, name="feedback"),
     path("cabinet/feedback/", feedback_queue, name="feedback_queue"),
     path("guide/<slug:slug>/", guide, name="guide"),

@@ -221,7 +221,7 @@ class LedgerEvent(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     actor_name = models.CharField(max_length=150)
     action = models.CharField(max_length=12, choices=Action.choices)
-    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV")])
+    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV"), ("receipt", "Документ операции")])
     object_id = models.PositiveBigIntegerField()
     summary = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -241,3 +241,16 @@ class Feedback(models.Model):
 
     class Meta:
         ordering = ["-created_at", "-pk"]
+
+
+class TransactionReceipt(models.Model):
+    transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT, related_name="receipts")
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    filename = models.CharField(max_length=120)
+    content = models.BinaryField()
+    size = models.PositiveIntegerField()
+    sha256 = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["transaction", "sha256"], name="receipt_unique_transaction_content")]
