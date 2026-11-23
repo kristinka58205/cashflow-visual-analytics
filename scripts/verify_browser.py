@@ -1,5 +1,7 @@
 """Реальный Chrome в изолированной копии приложения с вымышленными данными."""
 import argparse
+import csv
+import io
 from datetime import date
 import hashlib
 from importlib.metadata import version
@@ -88,6 +90,15 @@ def verify(app_python, output):
                     page.get_by_role('button',name='Сохранить сверку',exact=True).click();page.wait_for_url('**/reconciliation/')
                     assert 'Остатки совпадают' in page.locator('main').inner_text()
                     checks.append('dated_reconciliation_form_saved');shot('reconciliation-desktop.png')
+                    visit('/statement/')
+                    page.locator('#id_account').select_option(str(ids['first']))
+                    page.get_by_role('button',name='Сформировать выписку',exact=True).click()
+                    assert '188750,50' in page.locator('main').inner_text()
+                    with page.expect_download() as result:page.get_by_role('link',name='Скачать полную выписку CSV',exact=True).click()
+                    statement=target/'statement.csv';result.value.save_as(statement)
+                    rows=list(csv.DictReader(io.StringIO(statement.read_text(encoding='utf-8-sig')),delimiter=';'))
+                    assert rows[0]['closing']=='188750.50' and any(row['source']=='transfer' for row in rows)
+                    checks.append('account_statement_and_full_csv');shot('statement-desktop.png')
                     page.set_viewport_size({'width':390,'height':844})
                     for path,name in [('/operations/','operations-mobile.png'),('/transfers/','transfers-mobile.png'),('/forecast/?account='+str(ids['first'])+'&days=7','forecast-mobile.png')]:
                         visit(path);shot(name)

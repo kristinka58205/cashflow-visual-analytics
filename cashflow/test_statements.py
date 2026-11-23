@@ -37,3 +37,16 @@ class StatementTests(TestCase):
             with self.assertRaises(ValidationError):account_statement(self.user,self.scope,self.account,date(2026,1,1),date(2026,1,1))
         self.client.force_login(self.user)
         self.assertContains(self.client.get('/statement/',{'account':self.account.pk,'start':'2026-01-01','end':'2026-01-01'}),'Входящий остаток')
+
+    def test_csv_preserves_exact_summary_and_formula_guard(self):
+        import csv,io
+        self.account.name='=ACCOUNT';self.account.save(update_fields=['name'])
+        CashTransaction.objects.create(account=self.account,category=self.category,occurred_on=date(2026,1,1),amount='.10',description='  =IMPORT')
+        self.client.force_login(self.user)
+        response=self.client.get('/statement/',{'account':self.account.pk,'start':'2026-01-01','end':'2026-01-01','format':'csv'})
+        self.assertEqual(response['Cache-Control'],'private, no-store')
+        rows=list(csv.DictReader(io.StringIO(response.content.decode('utf-8-sig')),delimiter=';'))
+        self.assertEqual(len(rows),2);self.assertEqual(rows[0]['source'],'summary')
+        self.assertEqual(rows[0]['opening'],'0.30');self.assertEqual(rows[1]['balance'],'0.40')
+        self.assertEqual(rows[1]['description'],"'  =IMPORT");self.assertEqual(rows[1]['account'],"'=ACCOUNT")
+        self.assertEqual(self.client.get('/statement/',{'format':'csv'}).status_code,400)

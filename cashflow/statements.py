@@ -1,5 +1,9 @@
 """Согласованная выписка счёта с внешними операциями и своими переводами."""
 from datetime import timedelta
+import csv
+import io
+from django.http import HttpResponse, HttpResponseBadRequest
+from .exports import spreadsheet_text
 from decimal import Decimal
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -61,6 +65,19 @@ def account_statement(user,scope,account,start,end):
             'debits':debits,'rows':rows,'generated_at':timezone.now(),'scope_name':scope.name}
 
 
+def statement_csv(report):
+    stream=io.StringIO(newline="");writer=csv.writer(stream,delimiter=";",lineterminator="\n")
+    writer.writerow(['date','source','id','label','description','counterparty','credit','debit','balance','opening','closing','account','start','end','generated_at'])
+    metadata=[f"{report['opening']:.2f}",f"{report['closing']:.2f}",spreadsheet_text(report['account'].name),report['start'].isoformat(),report['end'].isoformat(),report['generated_at'].isoformat()]
+    writer.writerow(['','summary','','Итоги периода','','',f"{report['credits']:.2f}",f"{report['debits']:.2f}",f"{report['closing']:.2f}",*metadata])
+    for row in report['rows']:
+        writer.writerow([row['date'].isoformat(),row['source'],row['id'],*[spreadsheet_text(row[key]) for key in ['label','description','counterparty']],
+            *[f"{row[key]:.2f}" for key in ['credit','debit','balance']],*metadata])
+    response=HttpResponse('\ufeff'+stream.getvalue(),content_type='text/csv; charset=utf-8')
+    response['Content-Disposition']='attachment; filename="account-statement.csv"';response['Cache-Control']='private, no-store'
+    return response
+
+
 @login_required
 def statement_view(request):
     scope=get_scope(request);today=timezone.localdate()
@@ -70,5 +87,8 @@ def statement_view(request):
         try:report=account_statement(request.user,scope,**form.cleaned_data)
         except ValidationError as exc:form.add_error(None,exc)
         else:page=Paginator(report['rows'],100).get_page(request.GET.get('page'))
+    if request.GET.get('format')=='csv':
+        if report is None:return HttpResponseBadRequest('Проверьте счёт, период и предел выписки.')
+        return statement_csv(report)
     query=request.GET.copy();query.pop('page',None)
     return render(request,'cashflow/statement.html',{'form':form,'report':report,'page':page,'query':query.urlencode()})
