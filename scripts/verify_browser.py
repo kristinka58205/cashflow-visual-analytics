@@ -81,6 +81,13 @@ def verify(app_python, output):
                     for path in ['/catalog/','/payments/','/budgets/','/history/','/reconciliation/','/forecast/']:
                         visit(path)
                     checks.append('authenticated_navigation')
+                    visit('/reconciliation/')
+                    assert page.locator('#id_checked_on').input_value()==date.today().isoformat()
+                    page.locator('#id_account').select_option(str(ids['first']))
+                    page.locator('#id_statement_balance').fill('188750.50')
+                    page.get_by_role('button',name='Сохранить сверку',exact=True).click();page.wait_for_url('**/reconciliation/')
+                    assert 'Остатки совпадают' in page.locator('main').inner_text()
+                    checks.append('dated_reconciliation_form_saved');shot('reconciliation-desktop.png')
                     page.set_viewport_size({'width':390,'height':844})
                     for path,name in [('/operations/','operations-mobile.png'),('/transfers/','transfers-mobile.png'),('/forecast/?account='+str(ids['first'])+'&days=7','forecast-mobile.png')]:
                         visit(path);shot(name)

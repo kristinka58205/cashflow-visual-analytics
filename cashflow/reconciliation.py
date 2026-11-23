@@ -43,7 +43,7 @@ def reconcile(user, scope, account_id, checked_on, statement_balance):
 
 class ReconciliationForm(forms.Form):
     account = forms.ModelChoiceField(label="Счёт", queryset=BankAccount.objects.none())
-    checked_on = forms.DateField(label="Дата остатка", widget=forms.DateInput(attrs={"type": "date"}))
+    checked_on = forms.DateField(label="Дата остатка", widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
     statement_balance = forms.DecimalField(label="Остаток по выписке, ₽", max_digits=18, decimal_places=2)
 
     def __init__(self, *args, scope, **kwargs):
