@@ -25,7 +25,10 @@ from cashflow.forecast import forecast
 
 from cashflow.transfers import transfer_list
 
+from cashflow.statements import statement_view
+
 urlpatterns = [
+    path("statement/",statement_view,name="statement"),
     path("transfers/", transfer_list, name="transfer_list"),
     path("forecast/", forecast, name="forecast"),
     path("reconciliation/", reconciliation_list, name="reconciliation_list"),

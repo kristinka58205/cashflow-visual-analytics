@@ -12,7 +12,7 @@
 <span class="brand-mark">п</span>поток<span class="brand-note">денежные потоки</span>
 </a>
 <nav aria-label="Главное меню">
-<a href="{% url 'home' %}">Главная</a>{% if user.is_authenticated %}<a href="{% url 'transaction_list' %}">Операции</a><a href="{% url 'catalog' %}">Справочники</a><a href="{% url 'analytics' %}">Аналитика</a><a href="{% url 'budget_list' %}">Бюджеты</a><a href="{% url 'payment_list' %}">Платежи</a>{% if ledger.can_write %}<a href="{% url 'import_upload' %}">Импорт</a>{% endif %}<a href="{% url 'organization_list' %}">Организации</a><a href="{% url 'audit_list' %}">Действия</a><a href="{% url 'reconciliation_list' %}">Сверка</a><a href="{% url 'forecast' %}">Ликвидность</a><a href="{% url 'transfer_list' %}">Переводы</a>
+<a href="{% url 'home' %}">Главная</a>{% if user.is_authenticated %}<a href="{% url 'transaction_list' %}">Операции</a><a href="{% url 'catalog' %}">Справочники</a><a href="{% url 'analytics' %}">Аналитика</a><a href="{% url 'budget_list' %}">Бюджеты</a><a href="{% url 'payment_list' %}">Платежи</a>{% if ledger.can_write %}<a href="{% url 'import_upload' %}">Импорт</a>{% endif %}<a href="{% url 'organization_list' %}">Организации</a><a href="{% url 'audit_list' %}">Действия</a><a href="{% url 'reconciliation_list' %}">Сверка</a><a href="{% url 'forecast' %}">Ликвидность</a><a href="{% url 'transfer_list' %}">Переводы</a><a href="{% url 'statement' %}">Выписка</a>
 <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">Выйти</button>
 </form>{% else %}<a href="{% url 'login' %}">Войти</a>
 <a class="button small" href="{% url 'register' %}">Создать аккаунт</a>{% endif %}</nav>
