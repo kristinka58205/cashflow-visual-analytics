@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django import forms
+from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -9,7 +10,7 @@ from django.utils import timezone
 from .access import get_scope, write_scope
 from .audit import record_event
 from .documents import report_scope
-from .models import AccountReconciliation, BankAccount
+from .models import AccountReconciliation, BankAccount, CashTransfer
 
 
 def balance_at(scope, account, checked_on):
@@ -17,6 +18,9 @@ def balance_at(scope, account, checked_on):
     balance = account.opening_balance
     for kind, amount in scope.entries().filter(account=account, occurred_on__lte=checked_on).values_list("category__kind", "amount").iterator():
         balance += amount if kind == "income" else -amount
+    for source, target, amount in CashTransfer.objects.filter(occurred_on__lte=checked_on).filter(
+            Q(from_account=account) | Q(to_account=account)).values_list("from_account_id", "to_account_id", "amount").iterator():
+        balance += amount if target == account.pk else -amount
     return balance
 
 

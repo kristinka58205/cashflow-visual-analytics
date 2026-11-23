@@ -221,7 +221,7 @@ class LedgerEvent(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     actor_name = models.CharField(max_length=150)
     action = models.CharField(max_length=12, choices=Action.choices)
-    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV"), ("receipt", "Документ операции"), ("reconciliation", "Сверка остатков")])
+    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV"), ("receipt", "Документ операции"), ("reconciliation", "Сверка остатков"), ("transfer", "Межсчётный перевод")])
     object_id = models.PositiveBigIntegerField()
     summary = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -273,3 +273,30 @@ class AccountReconciliation(models.Model):
     class Meta:
         ordering = ["-created_at", "-pk"]
         constraints = [models.UniqueConstraint(fields=["account", "checked_on", "statement_balance", "ledger_balance"], name="unique_account_reconciliation_snapshot")]
+
+
+class CashTransfer(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    from_account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="outgoing_transfers")
+    to_account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="incoming_transfers")
+    amount = models.DecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    occurred_on = models.DateField("Дата", default=timezone.localdate)
+    description = models.CharField("Назначение", max_length=500)
+    command_key = models.UUIDField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-occurred_on", "-pk"]
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name="transfer_positive"),
+            models.CheckConstraint(condition=~models.Q(from_account=models.F("to_account")), name="transfer_different_accounts")]
+
+    def clean(self):
+        if self.from_account_id == self.to_account_id:
+            raise ValidationError("Выберите два разных счёта.")
+        if self.from_account_id and self.to_account_id:
+            first = BankAccount.objects.filter(pk=self.from_account_id).values("owner_id", "organization_id").first()
+            second = BankAccount.objects.filter(pk=self.to_account_id).values("owner_id", "organization_id").first()
+            if first and second and not same_ledger(first, second):
+                raise ValidationError("Оба счёта должны принадлежать одной рабочей области.")
+        if self.occurred_on and self.occurred_on > timezone.localdate():
+            raise ValidationError("Будущий перевод нельзя отразить как фактический.")

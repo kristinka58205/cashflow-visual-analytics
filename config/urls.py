@@ -23,7 +23,10 @@ from cashflow.reconciliation import reconciliation_list
 
 from cashflow.forecast import forecast
 
+from cashflow.transfers import transfer_list
+
 urlpatterns = [
+    path("transfers/", transfer_list, name="transfer_list"),
     path("forecast/", forecast, name="forecast"),
     path("reconciliation/", reconciliation_list, name="reconciliation_list"),
     path("reports/cashflow.pdf", cashflow_pdf, name="cashflow_pdf"),
