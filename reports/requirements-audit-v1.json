@@ -1,0 +1,702 @@
+{
+  "schema_version": 1,
+  "source_head": "b04d00869d9e14be9bd459e072902b277cec8230",
+  "code_counts": [
+    {
+      "file": "cashflow/__init__.py",
+      "metric": "python_ast_statements",
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "cashflow/access.py",
+      "metric": "python_ast_statements",
+      "count": 88,
+      "sha256": "06fc2458db40ae8d7989c3c6ef16ae61b9b05be7e9bff361b05be4a20e87f6d6"
+    },
+    {
+      "file": "cashflow/admin.py",
+      "metric": "python_ast_statements",
+      "count": 3,
+      "sha256": "a173c856d0ca9365a4b2b960173190475a085855bcaed6a3c67db6bf2b4be4ad"
+    },
+    {
+      "file": "cashflow/apps.py",
+      "metric": "python_ast_statements",
+      "count": 5,
+      "sha256": "3124905bcb78dcb8d46c1c0106f4238105fc1e722b173d8989a104e66b31d91d"
+    },
+    {
+      "file": "cashflow/audit.py",
+      "metric": "python_ast_statements",
+      "count": 54,
+      "sha256": "078416aa9f88ac0e385d15f09a5a469d1b22b1371a1c12766fc42168cb247bc8"
+    },
+    {
+      "file": "cashflow/budgets.py",
+      "metric": "python_ast_statements",
+      "count": 43,
+      "sha256": "98c172d039b35a15b1877faf04c660e0b9dc22204208c0ba42c4d7b3df3e748b"
+    },
+    {
+      "file": "cashflow/cabinet.py",
+      "metric": "python_ast_statements",
+      "count": 51,
+      "sha256": "8dda0e2d93332aede428408a77af77989600185152efc4e91e957254a3df427a"
+    },
+    {
+      "file": "cashflow/demo.py",
+      "metric": "python_ast_statements",
+      "count": 33,
+      "sha256": "aa4ccc4520d6b3e757025e398dfe143029ee98b433dcae1d8ca450ad1b70430a"
+    },
+    {
+      "file": "cashflow/documents.py",
+      "metric": "python_ast_statements",
+      "count": 96,
+      "sha256": "4080cd12182a9ebf77a57b6bca7b8b906c9c93003a7c88d63613de54ae997f49"
+    },
+    {
+      "file": "cashflow/exports.py",
+      "metric": "python_ast_statements",
+      "count": 26,
+      "sha256": "3dd2e731aa402d9e3cdf3817bee7af537edd127ab0b1b8ef863c28613c06b0a7"
+    },
+    {
+      "file": "cashflow/feedback.py",
+      "metric": "python_ast_statements",
+      "count": 47,
+      "sha256": "f26e9315b855961eac0b2f86519a477c886a926740a8a2dfb8cdcac0e03a5362"
+    },
+    {
+      "file": "cashflow/forecast.py",
+      "metric": "python_ast_statements",
+      "count": 45,
+      "sha256": "202bd6ca8d9903b3e1db046fc858bfa50cc5166dc3af77379e03b4e5a6ea679c"
+    },
+    {
+      "file": "cashflow/forms.py",
+      "metric": "python_ast_statements",
+      "count": 104,
+      "sha256": "c33e0e955d833f4bd442abd4e21b571802ff0072c4bedd9029ebf766ac68094d"
+    },
+    {
+      "file": "cashflow/imports.py",
+      "metric": "python_ast_statements",
+      "count": 103,
+      "sha256": "a3908613462e704182b8b1cfcb71e539a774758366a485011fafcb24be4507c5"
+    },
+    {
+      "file": "cashflow/management/__init__.py",
+      "metric": "python_ast_statements",
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "cashflow/management/commands/__init__.py",
+      "metric": "python_ast_statements",
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "cashflow/management/commands/seed_demo.py",
+      "metric": "python_ast_statements",
+      "count": 16,
+      "sha256": "cb83a01db4bff1331af3b134ba6d027701529d97921c798c8beee0d651bcf90b"
+    },
+    {
+      "file": "cashflow/models.py",
+      "metric": "python_ast_statements",
+      "count": 226,
+      "sha256": "514347f354b78c8c3a0fbf56b5376e90bdb3971d21e881f91e24cacbe144713b"
+    },
+    {
+      "file": "cashflow/money.py",
+      "metric": "python_ast_statements",
+      "count": 44,
+      "sha256": "66507bcfb2e3931cb49799c7c45a131fc8d658ed81105ad301387c3a9d759987"
+    },
+    {
+      "file": "cashflow/organizations.py",
+      "metric": "python_ast_statements",
+      "count": 113,
+      "sha256": "bab25657b0cdff034cb26b15ecd32164288bbe9d7c7a41f83afb59b8ac14eb65"
+    },
+    {
+      "file": "cashflow/payments.py",
+      "metric": "python_ast_statements",
+      "count": 76,
+      "sha256": "764265dc90fc7e598f0333309c7bb297934b907fe2b9ba100c1aa505217a21cf"
+    },
+    {
+      "file": "cashflow/public.py",
+      "metric": "python_ast_statements",
+      "count": 11,
+      "sha256": "1174bd1c5233ef677daeed6abf480e037c0e5826b07af471f054df68d3a4b68f"
+    },
+    {
+      "file": "cashflow/receipts.py",
+      "metric": "python_ast_statements",
+      "count": 73,
+      "sha256": "2a30e0341f81220743764d382e608e9c2fd99bd5023e2794d33691eb281e5a6b"
+    },
+    {
+      "file": "cashflow/reconciliation.py",
+      "metric": "python_ast_statements",
+      "count": 63,
+      "sha256": "4bd925ef7add2b18e817e1d2224e4665902aa9edbe55a1a7c90c803a8aca2364"
+    },
+    {
+      "file": "cashflow/services.py",
+      "metric": "python_ast_statements",
+      "count": 68,
+      "sha256": "fc69d96f620eb7b4a41e1ef5f01ca9016b9382ebaecea4390a909da80b053f72"
+    },
+    {
+      "file": "cashflow/static/cashflow/app.css",
+      "metric": "nonempty_markup_style_lines",
+      "count": 84,
+      "sha256": "c9788f604be80e381342e2bb919c679855305abc76727b057847887ccac10667"
+    },
+    {
+      "file": "cashflow/templates/cashflow/analytics.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 9,
+      "sha256": "9e1623619786544b72f9a4cd4afd943aba7fb002eaf89ac8c31a8b49a5481ccd"
+    },
+    {
+      "file": "cashflow/templates/cashflow/audit.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "ea08f4eaf35a3d09f71e78e00f935627bbef69c3cb60553a2f0b49e40d666e42"
+    },
+    {
+      "file": "cashflow/templates/cashflow/budget_form.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "6afeefd0ad30da7c82296ec3d05526492776763e162a9c68841c1d0057127660"
+    },
+    {
+      "file": "cashflow/templates/cashflow/budgets.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 4,
+      "sha256": "51a3186e505e8d669ebee8c54ca16cc1e9fcf27296aa0ff6b0c2f13ce63a07b9"
+    },
+    {
+      "file": "cashflow/templates/cashflow/cabinet.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "02fde4c7d223c5fd314e86d01082d001dd7c1f47b01b39751a85e8e703168f77"
+    },
+    {
+      "file": "cashflow/templates/cashflow/catalog.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 8,
+      "sha256": "c00994bd8137b972f781f5ba52f3598c8825d4ef55b7206185f2b2a0833d8438"
+    },
+    {
+      "file": "cashflow/templates/cashflow/catalog_form.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "acbfeb45980445e0aabae6502b444f9b80e640d88b0fa731ab02e8671faadbad"
+    },
+    {
+      "file": "cashflow/templates/cashflow/confirm_delete.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "b3dae6d503d091933975942f2326a1001637bbf2f7a32767122daaf7b5be7d0a"
+    },
+    {
+      "file": "cashflow/templates/cashflow/dashboard.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 5,
+      "sha256": "a895fa11039867a9e139924ddcb3c8c23f83864adbceb53a5a32429b17c0c9e2"
+    },
+    {
+      "file": "cashflow/templates/cashflow/feedback.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "e58621424e02fa30d970b1581b062a709a6670ad28c6359db0ee86572526a147"
+    },
+    {
+      "file": "cashflow/templates/cashflow/feedback_queue.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "a42017ad72326e82f8b2ea25f00ac177389b51109833d538d0bc5e05d43b0546"
+    },
+    {
+      "file": "cashflow/templates/cashflow/guide.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "7afcd64a0c39e7e65d33c6717a1fd3c2abbb1051bb3daebc20e898d8145590ab"
+    },
+    {
+      "file": "cashflow/templates/cashflow/home.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 7,
+      "sha256": "049978af77eb45649d3e184b14569d8f3cc21c5af461d674768da27a4020bb4a"
+    },
+    {
+      "file": "cashflow/templates/cashflow/import_preview.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "cd47ad86a51e91f0f81b83938bf24684747ed7bd20b7c61dac2759314df301c7"
+    },
+    {
+      "file": "cashflow/templates/cashflow/import_upload.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "793a2ba5f5d5720651d49d69833d08419e680fc11771ab16051b8b03f226932d"
+    },
+    {
+      "file": "cashflow/templates/cashflow/organization_detail.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "61a3a2ed42ac863bb05812ebf6486214e5893960805f8e4d2caf9f3ab1a87b2f"
+    },
+    {
+      "file": "cashflow/templates/cashflow/organization_form.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "f0073f82edc4efd745aca74baca29733bf9c737464dc83822a079b61ac6cafff"
+    },
+    {
+      "file": "cashflow/templates/cashflow/organizations.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "d788258a118626bcd1d9a3440a902ef757808ef6aee9f0c1273cde00c359ebc9"
+    },
+    {
+      "file": "cashflow/templates/cashflow/payment_form.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "a79dc32101daebfd2d9afbefbbd003f2b4938f51faf78e2c20a05cdaed419843"
+    },
+    {
+      "file": "cashflow/templates/cashflow/payments.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 2,
+      "sha256": "e446ab46f07ad9b010fb53444bbe712ed478cae113c0646ca8f23ff4acc3a4cc"
+    },
+    {
+      "file": "cashflow/templates/cashflow/receipts.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "a79c321056a65f3fdfacf2407d58d135d404789d621db27c1c836d5241a04e70"
+    },
+    {
+      "file": "cashflow/templates/cashflow/transaction_form.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 1,
+      "sha256": "e49eb3cc99964118ccf02ed5858173ff94be6e660f0da627d953f3dcbaac20d3"
+    },
+    {
+      "file": "cashflow/templates/cashflow/transactions.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 4,
+      "sha256": "9d91c14700d6544bb21a63012a4756b1eb7b4c993c8f47205b385823b852d554"
+    },
+    {
+      "file": "cashflow/transfers.py",
+      "metric": "python_ast_statements",
+      "count": 56,
+      "sha256": "3f85c455cd23edb865ea4173264e584371646c5d95accdec47d9afb91bae0871"
+    },
+    {
+      "file": "cashflow/views.py",
+      "metric": "python_ast_statements",
+      "count": 103,
+      "sha256": "cb69bbbf79e8d5c3ca974fed8507c06c04375b76d49e2528a3c19abf5aaa3164"
+    },
+    {
+      "file": "config/__init__.py",
+      "metric": "python_ast_statements",
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "config/asgi.py",
+      "metric": "python_ast_statements",
+      "count": 4,
+      "sha256": "2d9b18e106c2c6201e8e31e249a2070cc21e5f62dfedc14b963b2c7c46ac7bb0"
+    },
+    {
+      "file": "config/database.py",
+      "metric": "python_ast_statements",
+      "count": 26,
+      "sha256": "23f35881756bc5d0f879b561193bae45bd87dcdab235d4f5abc38bdfa2e3f7b0"
+    },
+    {
+      "file": "config/settings.py",
+      "metric": "python_ast_statements",
+      "count": 40,
+      "sha256": "82add767b90ac998c4f1114a1849634cb851739a8303b71663e947abbf8f5703"
+    },
+    {
+      "file": "config/urls.py",
+      "metric": "python_ast_statements",
+      "count": 19,
+      "sha256": "8c6f641fd55f603b9844b72547e51b9658943f1dde50042def55168f30c5afdf"
+    },
+    {
+      "file": "config/wsgi.py",
+      "metric": "python_ast_statements",
+      "count": 4,
+      "sha256": "d7dca781104661c8c6529662a3310a0896ab994711a4a146434c9ec0ac942109"
+    },
+    {
+      "file": "templates/base.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 33,
+      "sha256": "bfad77f317079d988e7649c31456d064970dff235c8fb24bf8fe464b1e0e0a4c"
+    },
+    {
+      "file": "templates/cashflow/forecast.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 11,
+      "sha256": "28af87554ee44e1d255329ec2406fa9b889a8e2fc1675ded06d20c73beb7ad14"
+    },
+    {
+      "file": "templates/cashflow/reconciliation.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 13,
+      "sha256": "8f0e15a2c6e6126f49247ace14af6dfd79978c6ed7791f255af3c4d55e7f1cb1"
+    },
+    {
+      "file": "templates/cashflow/transfers.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 5,
+      "sha256": "bcf5e2413235b9851edd0643d1a664aef380a32e2c85ee73b8ac14541a1c2eae"
+    },
+    {
+      "file": "templates/registration/login.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 8,
+      "sha256": "3ad82263ab151471ef26480b925afe61dd3a6b294fb4d14fb6fd18de2d3ecfc6"
+    },
+    {
+      "file": "templates/registration/register.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 8,
+      "sha256": "907fb85bd49494bb3f3642437c20c76666ec74cc870cc9772d2352b7a54bdb3d"
+    }
+  ],
+  "mixed_code_units": 1857,
+  "method": "Python AST statements excluding docstrings/tests/migrations; HTML/CSS nonempty lines excluding comments. Different units are reported separately; not a standardized logical-line certification.",
+  "application_models": [
+    {
+      "model": "Counterparty",
+      "table": "cashflow_counterparty",
+      "fields": [
+        "id",
+        "organization",
+        "owner",
+        "name",
+        "description",
+        "tax_id"
+      ]
+    },
+    {
+      "model": "CashProject",
+      "table": "cashflow_cashproject",
+      "fields": [
+        "id",
+        "organization",
+        "owner",
+        "name",
+        "description",
+        "code"
+      ]
+    },
+    {
+      "model": "BankAccount",
+      "table": "cashflow_bankaccount",
+      "fields": [
+        "id",
+        "organization",
+        "owner",
+        "name",
+        "opening_balance",
+        "created_at"
+      ]
+    },
+    {
+      "model": "CashCategory",
+      "table": "cashflow_cashcategory",
+      "fields": [
+        "id",
+        "organization",
+        "owner",
+        "name",
+        "kind"
+      ]
+    },
+    {
+      "model": "CashTransaction",
+      "table": "cashflow_cashtransaction",
+      "fields": [
+        "id",
+        "account",
+        "category",
+        "counterparty",
+        "project",
+        "occurred_on",
+        "amount",
+        "description",
+        "created_at"
+      ]
+    },
+    {
+      "model": "ExpenseBudget",
+      "table": "cashflow_expensebudget",
+      "fields": [
+        "id",
+        "owner",
+        "category",
+        "month_start",
+        "limit"
+      ]
+    },
+    {
+      "model": "PlannedPayment",
+      "table": "cashflow_plannedpayment",
+      "fields": [
+        "id",
+        "account",
+        "category",
+        "counterparty",
+        "project",
+        "due_on",
+        "amount",
+        "description",
+        "status",
+        "transaction"
+      ]
+    },
+    {
+      "model": "ImportBatch",
+      "table": "cashflow_importbatch",
+      "fields": [
+        "id",
+        "organization",
+        "owner",
+        "filename",
+        "sha256",
+        "rows",
+        "created_at",
+        "applied_at"
+      ]
+    },
+    {
+      "model": "Organization",
+      "table": "cashflow_organization",
+      "fields": [
+        "id",
+        "owner",
+        "name",
+        "legal_name",
+        "tax_id",
+        "created_at"
+      ]
+    },
+    {
+      "model": "OrganizationMembership",
+      "table": "cashflow_organizationmembership",
+      "fields": [
+        "id",
+        "organization",
+        "user",
+        "role",
+        "joined_at"
+      ]
+    },
+    {
+      "model": "OrganizationInvitation",
+      "table": "cashflow_organizationinvitation",
+      "fields": [
+        "id",
+        "organization",
+        "created_by",
+        "token",
+        "role",
+        "expires_at",
+        "revoked",
+        "accepted_by",
+        "accepted_at"
+      ]
+    },
+    {
+      "model": "LedgerEvent",
+      "table": "cashflow_ledgerevent",
+      "fields": [
+        "id",
+        "organization",
+        "actor",
+        "actor_name",
+        "action",
+        "entity",
+        "object_id",
+        "summary",
+        "created_at"
+      ]
+    },
+    {
+      "model": "Feedback",
+      "table": "cashflow_feedback",
+      "fields": [
+        "id",
+        "author",
+        "subject",
+        "email",
+        "message",
+        "status",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "model": "TransactionReceipt",
+      "table": "cashflow_transactionreceipt",
+      "fields": [
+        "id",
+        "transaction",
+        "uploaded_by",
+        "filename",
+        "content",
+        "size",
+        "sha256",
+        "created_at"
+      ]
+    },
+    {
+      "model": "DemoDataset",
+      "table": "cashflow_demodataset",
+      "fields": [
+        "id",
+        "user",
+        "reference_date",
+        "version"
+      ]
+    },
+    {
+      "model": "AccountReconciliation",
+      "table": "cashflow_accountreconciliation",
+      "fields": [
+        "id",
+        "account",
+        "checked_on",
+        "statement_balance",
+        "ledger_balance",
+        "actor",
+        "created_at"
+      ]
+    },
+    {
+      "model": "CashTransfer",
+      "table": "cashflow_cashtransfer",
+      "fields": [
+        "id",
+        "owner",
+        "from_account",
+        "to_account",
+        "amount",
+        "occurred_on",
+        "description",
+        "command_key",
+        "created_at"
+      ]
+    }
+  ],
+  "domain_table_count": 16,
+  "technical_models": [
+    "DemoDataset"
+  ],
+  "public_guides": [
+    {
+      "path": "/guide/about/",
+      "title": "О сервисе"
+    },
+    {
+      "path": "/guide/accounts/",
+      "title": "Счета и остатки"
+    },
+    {
+      "path": "/guide/categories/",
+      "title": "Статьи и аналитики"
+    },
+    {
+      "path": "/guide/operations/",
+      "title": "Денежные операции"
+    },
+    {
+      "path": "/guide/analytics/",
+      "title": "Финансовая аналитика"
+    },
+    {
+      "path": "/guide/budgets/",
+      "title": "Бюджеты расходов"
+    },
+    {
+      "path": "/guide/payments/",
+      "title": "Платёжный календарь"
+    },
+    {
+      "path": "/guide/import/",
+      "title": "Импорт CSV"
+    },
+    {
+      "path": "/guide/teams/",
+      "title": "Организации и роли"
+    },
+    {
+      "path": "/guide/history/",
+      "title": "История и проверка"
+    }
+  ],
+  "staff_pages": [
+    {
+      "path": "/cabinet/overview/",
+      "title": "Обзор сервиса"
+    },
+    {
+      "path": "/cabinet/users/",
+      "title": "Аккаунты"
+    },
+    {
+      "path": "/cabinet/organizations/",
+      "title": "Организации"
+    },
+    {
+      "path": "/cabinet/memberships/",
+      "title": "Участники"
+    },
+    {
+      "path": "/cabinet/integrity/",
+      "title": "Целостность команд"
+    },
+    {
+      "path": "/cabinet/feedback/",
+      "title": "Обращения"
+    }
+  ],
+  "private_pages": [
+    "/operations/",
+    "/catalog/",
+    "/analytics/",
+    "/budgets/",
+    "/payments/",
+    "/organizations/",
+    "/history/",
+    "/reconciliation/",
+    "/forecast/",
+    "/transfers/"
+  ],
+  "roles": [
+    "admin",
+    "editor",
+    "viewer"
+  ],
+  "limitations": [
+    "Counts describe source structure, not semantic correctness. Formal logical-line counting and report formatting require the supervisor’s accepted method."
+  ]
+}
