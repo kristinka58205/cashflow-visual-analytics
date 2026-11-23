@@ -1,3 +1,6 @@
+import uuid
+from django.core.exceptions import ValidationError
+from .operations import create_operation
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
@@ -5,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm, TransactionForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
+from .forms import AccountForm, CategoryForm, TransactionForm, OperationCreateForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, PlannedPayment
 from .services import financial_summary, filtered_transactions, transaction_totals, cashflow_analysis
 from django.core.paginator import Paginator
@@ -113,12 +116,22 @@ def transaction_edit(request, pk=None):
     if entry and PlannedPayment.objects.filter(transaction=entry).exists():
         messages.error(request, "Операция проведённого планового платежа защищена от прямого изменения.")
         return redirect("transaction_list")
-    form = TransactionForm(request.POST if request.method == "POST" else None, owner=request.user, scope=get_scope(request), instance=entry)
+    form_class = TransactionForm if pk else OperationCreateForm
+    form = form_class(request.POST if request.method == "POST" else None, owner=request.user,
+                      scope=get_scope(request), instance=entry, initial={"command_key": uuid.uuid4()})
     if request.method == "POST" and form.is_valid():
-        saved = form.save()
-        record_event(get_scope(request), "updated" if pk else "created", "operation", saved.pk, f"{saved.description}: {saved.amount:.2f} ₽")
-        messages.success(request, "Операция сохранена.")
-        return redirect("transaction_list")
+        try:
+            if pk:
+                saved = form.save()
+                record_event(get_scope(request), "updated", "operation", saved.pk, f"{saved.description}: {saved.amount:.2f} ₽")
+                created = True
+            else:
+                saved, created = create_operation(request.user, get_scope(request), form.cleaned_data["command_key"], form.save(commit=False))
+        except ValidationError as exc:
+            form.add_error(None, exc)
+        else:
+            messages.success(request, "Операция сохранена." if created else "Эта операция уже сохранена.")
+            return redirect("transaction_list")
     return render(request, "cashflow/transaction_form.html", {"form": form})
 
 

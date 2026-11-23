@@ -82,7 +82,9 @@ def write_scope(user, scope=None):
         if scope.organization:
             organization = Organization.objects.select_for_update().get(pk=scope.organization_id)
             scope = LedgerScope(user, organization)
-        get_user_model().objects.select_for_update().get(pk=user.pk)
+        locked = get_user_model().objects.select_for_update().get(pk=user.pk)
+        if not locked.is_active:
+            raise PermissionDenied("Учётная запись отключена.")
         if not scope.can_write:
             raise PermissionDenied("Роль руководителя позволяет просматривать данные и отчёты.")
         yield scope

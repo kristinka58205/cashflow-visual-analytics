@@ -1,3 +1,4 @@
+from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -62,7 +63,7 @@ class TransactionTests(TestCase):
         self.client.force_login(self.user)
 
     def post_entry(self, **overrides):
-        values = {"account": self.account.pk, "category": self.income.pk, "occurred_on": timezone.localdate(), "amount": "0.10", "description": "Платёж"}
+        values = {"command_key": uuid4(), "account": self.account.pk, "category": self.income.pk, "occurred_on": timezone.localdate(), "amount": "0.10", "description": "Платёж"}
         values.update(overrides)
         return self.client.post(reverse("transaction_create"), values)
 

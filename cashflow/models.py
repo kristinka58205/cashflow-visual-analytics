@@ -301,3 +301,13 @@ class CashTransfer(models.Model):
                 raise ValidationError("Оба счёта должны принадлежать одной рабочей области.")
         if self.occurred_on and self.occurred_on > timezone.localdate():
             raise ValidationError("Будущий перевод нельзя отразить как фактический.")
+
+
+class OperationCommand(models.Model):
+    """Квитанция ручного ввода сохраняется и после удаления операции."""
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    organization = models.ForeignKey(Organization, null=True, on_delete=models.PROTECT)
+    key = models.UUIDField(unique=True)
+    payload = models.JSONField()
+    entry = models.ForeignKey(CashTransaction, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)

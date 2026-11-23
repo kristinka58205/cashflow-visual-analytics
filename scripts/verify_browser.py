@@ -69,8 +69,15 @@ def verify(app_python, output):
                     visit('/operations/new/')
                     page.locator('#id_account').select_option(str(ids['first']));page.locator('#id_category').select_option(str(ids['income']))
                     page.locator('#id_occurred_on').fill(date.today().isoformat());page.locator('#id_amount').fill('0.10')
-                    page.locator('#id_description').fill('Браузерная проверка точных копеек');page.get_by_role('button',name='Сохранить',exact=True).click()
+                    page.locator('#id_description').fill('Браузерная проверка точных копеек')
+                    repeated=page.locator('main form').evaluate('(form)=>Object.fromEntries(new FormData(form))')
+                    page.get_by_role('button',name='Сохранить',exact=True).click()
                     page.wait_for_url('**/operations/');assert 'Браузерная проверка точных копеек' in page.locator('main').inner_text();checks.append('manual_operation_saved')
+                    replay=context.request.post(url+'/operations/new/',form=repeated,headers={'Referer':url+'/operations/new/'})
+                    assert replay.status==200
+                    page.reload()
+                    assert page.locator('article.task').filter(has_text='Браузерная проверка точных копеек').count()==1
+                    checks.append('manual_operation_retry_keeps_one_row')
                     visit('/transfers/');page.locator('#id_from_account').select_option(str(ids['first']));page.locator('#id_to_account').select_option(str(ids['second']))
                     page.locator('#id_amount').fill('0.05');page.locator('#id_occurred_on').fill(date.today().isoformat());page.locator('#id_description').fill('Перевод браузерной проверки')
                     page.get_by_role('button',name='Записать перевод').click();page.wait_for_url('**/transfers/')

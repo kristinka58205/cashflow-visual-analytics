@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_head": "b04d00869d9e14be9bd459e072902b277cec8230",
+  "source_head": "0090b9c3689f84d3818347016141fbb4f3f61243",
   "code_counts": [
     {
       "file": "cashflow/__init__.py",
@@ -11,8 +11,8 @@
     {
       "file": "cashflow/access.py",
       "metric": "python_ast_statements",
-      "count": 88,
-      "sha256": "06fc2458db40ae8d7989c3c6ef16ae61b9b05be7e9bff361b05be4a20e87f6d6"
+      "count": 90,
+      "sha256": "c5ec1af030cf3fd3af8874fbaebecca58228fc1a84882d6dd23536e7a7352792"
     },
     {
       "file": "cashflow/admin.py",
@@ -77,8 +77,8 @@
     {
       "file": "cashflow/forms.py",
       "metric": "python_ast_statements",
-      "count": 104,
-      "sha256": "c33e0e955d833f4bd442abd4e21b571802ff0072c4bedd9029ebf766ac68094d"
+      "count": 106,
+      "sha256": "818b8c3299015495471362f5c404f1d952a0368a14e0a2d5f1deb481fa1ea30c"
     },
     {
       "file": "cashflow/imports.py",
@@ -107,14 +107,20 @@
     {
       "file": "cashflow/models.py",
       "metric": "python_ast_statements",
-      "count": 226,
-      "sha256": "514347f354b78c8c3a0fbf56b5376e90bdb3971d21e881f91e24cacbe144713b"
+      "count": 233,
+      "sha256": "1cac9c3bb37b86e68a307cd1e73f57dbffc3d1cc8443a2eb982811232d1e41a4"
     },
     {
       "file": "cashflow/money.py",
       "metric": "python_ast_statements",
       "count": 44,
       "sha256": "66507bcfb2e3931cb49799c7c45a131fc8d658ed81105ad301387c3a9d759987"
+    },
+    {
+      "file": "cashflow/operations.py",
+      "metric": "python_ast_statements",
+      "count": 26,
+      "sha256": "6d6c214e9df80c344a2d7c1eea4ee258f64b84948be7024e6cdc6db75bcf3a57"
     },
     {
       "file": "cashflow/organizations.py",
@@ -144,13 +150,19 @@
       "file": "cashflow/reconciliation.py",
       "metric": "python_ast_statements",
       "count": 63,
-      "sha256": "4bd925ef7add2b18e817e1d2224e4665902aa9edbe55a1a7c90c803a8aca2364"
+      "sha256": "f76bf955008c4f3183f8c687b96bf84393dc5084a838ef2346feac7734abc72f"
     },
     {
       "file": "cashflow/services.py",
       "metric": "python_ast_statements",
       "count": 68,
       "sha256": "fc69d96f620eb7b4a41e1ef5f01ca9016b9382ebaecea4390a909da80b053f72"
+    },
+    {
+      "file": "cashflow/statements.py",
+      "metric": "python_ast_statements",
+      "count": 90,
+      "sha256": "f8757d0324e3a598180f2611cff8e2048ac7bc636e2140ec2b51b325afab6cf1"
     },
     {
       "file": "cashflow/static/cashflow/app.css",
@@ -305,8 +317,8 @@
     {
       "file": "cashflow/views.py",
       "metric": "python_ast_statements",
-      "count": 103,
-      "sha256": "cb69bbbf79e8d5c3ca974fed8507c06c04375b76d49e2528a3c19abf5aaa3164"
+      "count": 112,
+      "sha256": "75492a70d3c3aa941c67392c2d6dc54c86789339fc1e38e1ab4e69238117a090"
     },
     {
       "file": "config/__init__.py",
@@ -335,8 +347,8 @@
     {
       "file": "config/urls.py",
       "metric": "python_ast_statements",
-      "count": 19,
-      "sha256": "8c6f641fd55f603b9844b72547e51b9658943f1dde50042def55168f30c5afdf"
+      "count": 20,
+      "sha256": "def1c0991956fb40b2563bed6c6423df8bac748ffd49e7af24bbc85949fca59b"
     },
     {
       "file": "config/wsgi.py",
@@ -348,7 +360,7 @@
       "file": "templates/base.html",
       "metric": "nonempty_markup_style_lines",
       "count": 33,
-      "sha256": "bfad77f317079d988e7649c31456d064970dff235c8fb24bf8fe464b1e0e0a4c"
+      "sha256": "ac62cd92a70efa29a97df1e0b1cfaef230f73568271ff845021aa9914475dfa0"
     },
     {
       "file": "templates/cashflow/forecast.html",
@@ -361,6 +373,12 @@
       "metric": "nonempty_markup_style_lines",
       "count": 13,
       "sha256": "8f0e15a2c6e6126f49247ace14af6dfd79978c6ed7791f255af3c4d55e7f1cb1"
+    },
+    {
+      "file": "templates/cashflow/statement.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 6,
+      "sha256": "528f00ae6ae373cdbfd1df2b8b79975a100f3f5a5ced3150917ca2c2578322ef"
     },
     {
       "file": "templates/cashflow/transfers.html",
@@ -381,7 +399,7 @@
       "sha256": "907fb85bd49494bb3f3642437c20c76666ec74cc870cc9772d2352b7a54bdb3d"
     }
   ],
-  "mixed_code_units": 1857,
+  "mixed_code_units": 2000,
   "method": "Python AST statements excluding docstrings/tests/migrations; HTML/CSS nonempty lines excluding comments. Different units are reported separately; not a standardized logical-line certification.",
   "application_models": [
     {
@@ -605,11 +623,25 @@
         "command_key",
         "created_at"
       ]
+    },
+    {
+      "model": "OperationCommand",
+      "table": "cashflow_operationcommand",
+      "fields": [
+        "id",
+        "owner",
+        "organization",
+        "key",
+        "payload",
+        "entry",
+        "created_at"
+      ]
     }
   ],
   "domain_table_count": 16,
   "technical_models": [
-    "DemoDataset"
+    "DemoDataset",
+    "OperationCommand"
   ],
   "public_guides": [
     {
@@ -689,7 +721,8 @@
     "/history/",
     "/reconciliation/",
     "/forecast/",
-    "/transfers/"
+    "/transfers/",
+    "/statement/"
   ],
   "roles": [
     "admin",

@@ -82,6 +82,10 @@ class TransactionForm(forms.ModelForm):
             self.fields[field].queryset = self.scope.catalog(model)
 
 
+class OperationCreateForm(TransactionForm):
+    command_key = forms.UUIDField(widget=forms.HiddenInput)
+
+
 class PaymentForm(TransactionForm):
     class Meta:
         model = PlannedPayment

@@ -1,3 +1,4 @@
+from uuid import uuid4
 from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
@@ -55,7 +56,7 @@ class SharedLedgerTests(TestCase):
         self.client.post(reverse("catalog_create", args=["categories"]), {"name": "Shared costs", "kind": "expense"})
         category = CashCategory.objects.get(name="Shared costs")
         self.assertEqual((category.owner, category.organization), (self.editor, self.organization))
-        self.client.post(reverse("transaction_create"), {"account": self.account.pk, "category": category.pk,
+        self.client.post(reverse("transaction_create"), {"command_key": uuid4(), "account": self.account.pk, "category": category.pk,
             "amount": "12.34", "occurred_on": self.today, "description": "Оплата"})
         self.assertEqual(CashTransaction.objects.get().amount, Decimal("12.34"))
         self.client.post(reverse("catalog_edit", args=["accounts", self.account.pk]), {"name": "Main shared", "opening_balance": "20"})

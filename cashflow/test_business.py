@@ -1,3 +1,4 @@
+from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -39,7 +40,7 @@ class BusinessCatalogTests(TestCase):
     def test_foreign_links_rejected_in_form_and_model(self):
         for field, model in [("counterparty", Counterparty), ("project", CashProject)]:
             foreign = model.objects.create(owner=self.other, name=field)
-            payload = {"account": self.account.pk, "category": self.category.pk,
+            payload = {"command_key": uuid4(), "account": self.account.pk, "category": self.category.pk,
                 "amount": "10", "description": "Подмена", "occurred_on": timezone.localdate(), field: foreign.pk}
             self.client.post(reverse("transaction_create"), payload)
             self.assertFalse(CashTransaction.objects.exists())

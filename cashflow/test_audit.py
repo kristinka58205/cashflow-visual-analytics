@@ -1,3 +1,4 @@
+from uuid import uuid4
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -21,7 +22,7 @@ class AuditTests(TestCase):
         self.client.post(reverse("workspace_select", args=[self.organization.pk]))
 
     def test_mutation_records_actor_and_readers_cannot_see_personal_events(self):
-        self.client.post(reverse("transaction_create"), {"account": self.account.pk, "category": self.category.pk,
+        self.client.post(reverse("transaction_create"), {"command_key": uuid4(), "account": self.account.pk, "category": self.category.pk,
             "amount": "10.10", "description": "Company change", "occurred_on": timezone.localdate()})
         event = LedgerEvent.objects.get()
         self.assertEqual((event.actor, event.organization, event.action), (self.owner, self.organization, "created"))
@@ -38,7 +39,7 @@ class AuditTests(TestCase):
     def test_event_failure_rolls_back_financial_mutation(self):
         with patch("cashflow.audit.LedgerEvent.objects.create", side_effect=RuntimeError("Audit unavailable")):
             with self.assertRaises(RuntimeError):
-                self.client.post(reverse("transaction_create"), {"account": self.account.pk, "category": self.category.pk,
+                self.client.post(reverse("transaction_create"), {"command_key": uuid4(), "account": self.account.pk, "category": self.category.pk,
                     "amount": "10", "description": "Must roll back", "occurred_on": timezone.localdate()})
         self.assertFalse(CashTransaction.objects.exists())
 
