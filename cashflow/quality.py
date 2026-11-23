@@ -21,7 +21,7 @@ MAX_OPERATIONS = 10000
 
 
 class QualityForm(AnalysisPeriodForm):
-    account = forms.ModelChoiceField(label='Счёт', queryset=BankAccount.objects.none(), required=False)
+    account = forms.ModelChoiceField(label='Счёт', queryset=BankAccount.objects.none(), required=False, empty_label='Все счета')
 
     def __init__(self, *args, scope, **kwargs):
         super().__init__(*args, **kwargs)

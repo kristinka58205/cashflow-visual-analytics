@@ -41,7 +41,7 @@ def audit():
         'application_models':models,'domain_table_count':sum(row['model'] not in technical for row in models),'technical_models':sorted(technical),
         'public_guides':[{'path':'/guide/'+row[0]+'/','title':row[1]} for row in GUIDES],
         'staff_pages':[{'path':'/cabinet/'+slug+'/','title':title} for slug,title in PAGES]+[{'path':'/cabinet/feedback/','title':'Обращения'}],
-        'private_pages':['/operations/','/catalog/','/analytics/','/budgets/','/payments/','/organizations/','/history/','/reconciliation/','/forecast/','/transfers/','/statement/'],
+        'private_pages':['/operations/','/catalog/','/analytics/','/budgets/','/payments/','/organizations/','/history/','/reconciliation/','/forecast/','/transfers/','/statement/','/analytics/dimensions/','/quality/','/balances/'],
         'roles':['admin','editor','viewer'],'limitations':['Counts describe source structure, not semantic correctness. Formal logical-line counting and report formatting require the supervisor’s accepted method.']}
     target=ROOT/'reports/requirements-audit-v1.json';target.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({k:result[k] for k in ['mixed_code_units','domain_table_count','technical_models']},ensure_ascii=False))

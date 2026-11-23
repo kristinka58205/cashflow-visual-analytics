@@ -106,8 +106,39 @@ def verify(app_python, output):
                     rows=list(csv.DictReader(io.StringIO(statement.read_text(encoding='utf-8-sig')),delimiter=';'))
                     assert rows[0]['closing']=='188750.50' and any(row['source']=='transfer' for row in rows)
                     checks.append('account_statement_and_full_csv');shot('statement-desktop.png')
+                    visit('/analytics/')
+                    page.get_by_role('link',name='Потоки по проектам и контрагентам',exact=True).click()
+                    assert '88750,55' in page.locator('main').inner_text()
+                    with page.expect_download() as result:page.get_by_role('link',name='Скачать все группы CSV',exact=True).click()
+                    dimensions_csv=target/'dimensions.csv';result.value.save_as(dimensions_csv)
+                    groups=list(csv.DictReader(io.StringIO(dimensions_csv.read_text(encoding='utf-8-sig')),delimiter=';'))
+                    assert groups[0]['net']=='88750.55' and len(groups)==3
+                    shot('dimensions-desktop.png')
+                    page.get_by_role('link',name='Без проекта',exact=True).click()
+                    assert page.locator('article.task').count()==1
+                    checks.append('dimension_totals_csv_and_unassigned_drilldown')
+                    visit('/balances/')
+                    assert '188750,55' in page.locator('main').inner_text()
+                    with page.expect_download() as result:page.get_by_role('link',name='Скачать все счета CSV',exact=True).click()
+                    positions_csv=target/'positions.csv';result.value.save_as(positions_csv)
+                    positions=list(csv.DictReader(io.StringIO(positions_csv.read_text(encoding='utf-8-sig')),delimiter=';'))
+                    assert positions[0]['balance']=='188750.55' and len(positions)==3
+                    checks.append('all_account_positions_and_csv');shot('positions-desktop.png')
+                    for _ in range(2):
+                        visit('/operations/new/')
+                        page.locator('#id_account').select_option(str(ids['first']));page.locator('#id_category').select_option(str(ids['income']))
+                        page.locator('#id_occurred_on').fill(date.today().isoformat());page.locator('#id_amount').fill('0.01')
+                        page.locator('#id_description').fill('Браузерное совпадение для проверки')
+                        page.get_by_role('button',name='Сохранить',exact=True).click();page.wait_for_url('**/operations/')
+                    visit('/quality/')
+                    assert 'совпадений: 2' in page.locator('main').inner_text()
+                    with page.expect_download() as result:page.get_by_role('link',name='Скачать все совпадения CSV',exact=True).click()
+                    duplicates_csv=target/'duplicates.csv';result.value.save_as(duplicates_csv)
+                    duplicates=list(csv.DictReader(io.StringIO(duplicates_csv.read_text(encoding='utf-8-sig')),delimiter=';'))
+                    assert len(duplicates)==1 and duplicates[0]['matching_records']=='2' and duplicates[0]['possible_extra']=='0.01'
+                    checks.append('possible_duplicates_from_two_distinct_forms');shot('quality-desktop.png')
                     page.set_viewport_size({'width':390,'height':844})
-                    for path,name in [('/operations/','operations-mobile.png'),('/transfers/','transfers-mobile.png'),('/forecast/?account='+str(ids['first'])+'&days=7','forecast-mobile.png')]:
+                    for path,name in [('/operations/','operations-mobile.png'),('/transfers/','transfers-mobile.png'),('/analytics/dimensions/','dimensions-mobile.png'),('/balances/','positions-mobile.png'),('/quality/','quality-mobile.png'),('/forecast/?account='+str(ids['first'])+'&days=7','forecast-mobile.png')]:
                         visit(path);shot(name)
                         dimensions=page.evaluate('({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth})')
                         assert dimensions['scroll']<=dimensions['width']+1,(path,dimensions)

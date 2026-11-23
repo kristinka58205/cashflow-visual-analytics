@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_head": "0090b9c3689f84d3818347016141fbb4f3f61243",
+  "source_head": "f29a8e7df5b2e53a1bcf0388f17a1fb38dffe13e",
   "code_counts": [
     {
       "file": "cashflow/__init__.py",
@@ -51,6 +51,12 @@
       "sha256": "aa4ccc4520d6b3e757025e398dfe143029ee98b433dcae1d8ca450ad1b70430a"
     },
     {
+      "file": "cashflow/dimensions.py",
+      "metric": "python_ast_statements",
+      "count": 72,
+      "sha256": "6b7ccea580fc44a2f883a848bc4f364efb22fe412b2149c4bc6f0d22626873f9"
+    },
+    {
       "file": "cashflow/documents.py",
       "metric": "python_ast_statements",
       "count": 96,
@@ -77,8 +83,8 @@
     {
       "file": "cashflow/forms.py",
       "metric": "python_ast_statements",
-      "count": 106,
-      "sha256": "818b8c3299015495471362f5c404f1d952a0368a14e0a2d5f1deb481fa1ea30c"
+      "count": 107,
+      "sha256": "5ca6dcd91d3a68b61b7764565c68911632985a0c3b04763280a95e1911e3ada7"
     },
     {
       "file": "cashflow/imports.py",
@@ -135,10 +141,22 @@
       "sha256": "764265dc90fc7e598f0333309c7bb297934b907fe2b9ba100c1aa505217a21cf"
     },
     {
+      "file": "cashflow/positions.py",
+      "metric": "python_ast_statements",
+      "count": 74,
+      "sha256": "c5bce833f7afd842883b948743f6466c8cb211e0c751eeaabb0c3b8864d5926c"
+    },
+    {
       "file": "cashflow/public.py",
       "metric": "python_ast_statements",
       "count": 11,
       "sha256": "1174bd1c5233ef677daeed6abf480e037c0e5826b07af471f054df68d3a4b68f"
+    },
+    {
+      "file": "cashflow/quality.py",
+      "metric": "python_ast_statements",
+      "count": 71,
+      "sha256": "f4c90e01b34cdb17a3ffdc583501c6667356c30341ffc042879e64a877385330"
     },
     {
       "file": "cashflow/receipts.py",
@@ -155,8 +173,8 @@
     {
       "file": "cashflow/services.py",
       "metric": "python_ast_statements",
-      "count": 68,
-      "sha256": "fc69d96f620eb7b4a41e1ef5f01ca9016b9382ebaecea4390a909da80b053f72"
+      "count": 70,
+      "sha256": "f41dff7c5306efa96970ecc1ccde69f282f72bd126579277026c0259bcd43546"
     },
     {
       "file": "cashflow/statements.py",
@@ -167,14 +185,14 @@
     {
       "file": "cashflow/static/cashflow/app.css",
       "metric": "nonempty_markup_style_lines",
-      "count": 84,
-      "sha256": "c9788f604be80e381342e2bb919c679855305abc76727b057847887ccac10667"
+      "count": 85,
+      "sha256": "539498432566c07c4d7d93ad6a687f65175b62a9efc2836840fa8f4230cec42b"
     },
     {
       "file": "cashflow/templates/cashflow/analytics.html",
       "metric": "nonempty_markup_style_lines",
-      "count": 9,
-      "sha256": "9e1623619786544b72f9a4cd4afd943aba7fb002eaf89ac8c31a8b49a5481ccd"
+      "count": 10,
+      "sha256": "542f638c3d3bf6c671a575288c080973a2a165bd0db32e7eaf962013812d80da"
     },
     {
       "file": "cashflow/templates/cashflow/audit.html",
@@ -347,8 +365,8 @@
     {
       "file": "config/urls.py",
       "metric": "python_ast_statements",
-      "count": 20,
-      "sha256": "def1c0991956fb40b2563bed6c6423df8bac748ffd49e7af24bbc85949fca59b"
+      "count": 23,
+      "sha256": "818fa15c1ae1bd74c0219d1d724733b1cf8b7f8b435327129d789bcf3efa55ec"
     },
     {
       "file": "config/wsgi.py",
@@ -360,13 +378,31 @@
       "file": "templates/base.html",
       "metric": "nonempty_markup_style_lines",
       "count": 33,
-      "sha256": "ac62cd92a70efa29a97df1e0b1cfaef230f73568271ff845021aa9914475dfa0"
+      "sha256": "3f7dd868810738d1241db9cd82362ea7f77b57c838c6048d88014cba6a23b1c2"
+    },
+    {
+      "file": "templates/cashflow/dimensions.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 10,
+      "sha256": "452e7095f65b475475ee00fb290f471f167b2023f3101efc1f80cfd1090f8208"
     },
     {
       "file": "templates/cashflow/forecast.html",
       "metric": "nonempty_markup_style_lines",
       "count": 11,
       "sha256": "28af87554ee44e1d255329ec2406fa9b889a8e2fc1675ded06d20c73beb7ad14"
+    },
+    {
+      "file": "templates/cashflow/positions.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 10,
+      "sha256": "82de55bf1dd0be05d935b51eb78d6f2edcd72ddcef6db06162569af2c92e3f74"
+    },
+    {
+      "file": "templates/cashflow/quality.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 10,
+      "sha256": "6e459ff090e3144cdf1ea0dc7e7bcb6b16d6e1e1b00fc3220d4376c512313189"
     },
     {
       "file": "templates/cashflow/reconciliation.html",
@@ -399,7 +435,7 @@
       "sha256": "907fb85bd49494bb3f3642437c20c76666ec74cc870cc9772d2352b7a54bdb3d"
     }
   ],
-  "mixed_code_units": 2000,
+  "mixed_code_units": 2255,
   "method": "Python AST statements excluding docstrings/tests/migrations; HTML/CSS nonempty lines excluding comments. Different units are reported separately; not a standardized logical-line certification.",
   "application_models": [
     {
@@ -722,7 +758,10 @@
     "/reconciliation/",
     "/forecast/",
     "/transfers/",
-    "/statement/"
+    "/statement/",
+    "/analytics/dimensions/",
+    "/quality/",
+    "/balances/"
   ],
   "roles": [
     "admin",
