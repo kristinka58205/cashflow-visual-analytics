@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block crumb %}<a href="{% url 'analytics' %}">Аналитика</a> / Проверка записей{% endblock %}
+{% block content %}<h1>Проверка одинаковых операций</h1>
+<p>Сравниваются дата, счёт, статья, сумма, назначение, проект и контрагент. Совпадение не доказывает ошибку: это могут быть разные реальные платежи. Сверьте первичные документы перед исправлением учёта.</p>
+<form method="get" class="card filter-grid">{{ form.as_p }}<button class="button">Проверить записи</button></form>
+{% if report %}<p>{{ report.scope }} · Проверено: {{ report.checked }}. В совпадающих группах: {{ report.matched }}. Снимок {{ report.generated_at|date:'d.m.Y H:i:s' }}.</p>
+<p><a href="?{{ query }}&amp;format=csv">Скачать все совпадения CSV</a>. CSV содержит все ID; на экране показано до20 ссылок в группе.</p>
+<p>Если оставить по одной записи каждой группы, возможные лишние поступления: {{ report.possible_extra.income|floatformat:2 }} ₽; расходы: {{ report.possible_extra.expense|floatformat:2 }} ₽. Это ориентир для проверки, не подтверждённая корректировка.</p>
+{% for group in page %}<article class="card"><h2>{{ group.description }}</h2><p>{{ group.date|date:'d.m.Y' }} · {{ group.account }} · {{ group.category }} · {{ group.amount|floatformat:2 }} ₽ · совпадений: {{ group.count }}</p><div class="actions">{% for id in group.preview_ids %}<a href="{% url 'receipt_list' id %}">Документы операции №{{ id }}</a>{% endfor %}</div></article>{% empty %}<p class="card">Точных совпадений по выбранным признакам нет.</p>{% endfor %}
+<nav class="actions">{% if page.has_previous %}<a href="?{{ query }}&amp;page={{ page.previous_page_number }}">Предыдущая</a>{% endif %}<p>{{ page.paginator.count }} групп · {{ page.number }} / {{ page.paginator.num_pages }}</p>{% if page.has_next %}<a href="?{{ query }}&amp;page={{ page.next_page_number }}">Следующая</a>{% endif %}</nav>{% endif %}{% endblock %}
