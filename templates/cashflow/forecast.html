@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Календарь ликвидности — Поток{% endblock %}
+{% block crumb %}Календарь ликвидности{% endblock %}
+{% block content %}<h1>Календарь ликвидности</h1>
+<p>Сценарий для одного счёта: текущий фактический остаток и все непроведённые плановые платежи до выбранного горизонта. Просроченные и сегодняшние платежи условно исполняются сегодня. Оплаченные и отменённые планы исключены. Новые поступления, не внесённые в план, не предполагаются.</p>
+<form method="get" class="card">{{ form.as_p }}<button class="button">Рассчитать</button></form>
+{% if report %}<h2>{{ report.account.name }}</h2>
+<p>Фактический остаток: {{ report.opening|floatformat:2 }} ₽. Минимум сценария: {{ report.minimum|floatformat:2 }} ₽. Просроченных планов: {{ report.overdue }}.</p>
+{% if report.first_negative %}<p class="notice">Первый отрицательный остаток: {{ report.first_negative|date:'d.m.Y' }}. Проверьте сроки и источники средств.</p>{% else %}<p>В пределах внесённого плана отрицательного остатка нет.</p>{% endif %}
+<div class="table-wrap"><table><thead><tr><th>Дата</th><th>План поступлений, ₽</th><th>План расходов, ₽</th><th>Остаток сценария, ₽</th></tr></thead><tbody>{% for row in report.rows %}<tr><td>{{ row.date|date:'d.m.Y' }}</td><td>{{ row.income|floatformat:2 }}</td><td>{{ row.expense|floatformat:2 }}</td><td>{{ row.balance|floatformat:2 }}</td></tr>{% endfor %}</tbody></table></div>
+<p>Календарь не является вероятностным прогнозом, не проводит операции и не гарантирует платёжеспособность. Платежи отражаются целиком, внутридневной порядок неизвестен.</p>{% endif %}{% endblock %}
