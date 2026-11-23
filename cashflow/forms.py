@@ -98,6 +98,7 @@ class PaymentExecutionForm(forms.Form):
 
 
 class TransactionFilterForm(forms.Form):
+    unassigned = forms.ChoiceField(label="Без аналитики", required=False, choices=[("", "Любые"), ("project", "Без проекта"), ("counterparty", "Без контрагента")])
     search = forms.CharField(label="Назначение или контрагент", max_length=100, required=False)
     start = forms.DateField(label="С даты", required=False, widget=forms.DateInput(attrs={"type": "date"}))
     end = forms.DateField(label="По дату", required=False, widget=forms.DateInput(attrs={"type": "date"}))

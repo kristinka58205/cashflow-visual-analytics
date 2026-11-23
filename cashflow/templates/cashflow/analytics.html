@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% block crumb %}Аналитика{% endblock %}{% block content %}
 <section class="page-heading"><div><p class="eyebrow">СТРУКТУРА И ДИНАМИКА</p><h1>Аналитика потоков</h1><p class="muted">Выберите даты для сравнения поступлений и расходов, ₽.</p></div></section>
+<p><a href="{% url 'dimensions' %}">Потоки по проектам и контрагентам</a></p>
 <form method="get" class="card filter-grid">{{ form.as_p }}<div><button class="button">Показать</button></div></form>
 {% if report %}<p><a href="{% url 'cashflow_pdf' %}?start={{ report_start|date:'Y-m-d' }}&amp;end={{ report_end|date:'Y-m-d' }}">Скачать PDF-отчёт</a></p>
 <section class="stats"><div class="card"><span>Поступления</span><strong>{{ report.summary.income|floatformat:2 }}</strong></div><div class="card"><span>Расходы</span><strong>{{ report.summary.expense|floatformat:2 }}</strong></div><div class="card"><span>Чистый поток</span><strong>{{ report.summary.net|floatformat:2 }}</strong></div><div class="card"><span>Конечный остаток</span><strong>{{ report.summary.closing|floatformat:2 }}</strong></div></section>

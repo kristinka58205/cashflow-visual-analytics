@@ -50,6 +50,8 @@ def filtered_transactions(user, values, scope=None):
                           ("minimum", "amount__gte"), ("maximum", "amount__lte"), ("kind", "category__kind")]:
         if values.get(field) is not None and values.get(field) != "":
             entries = entries.filter(**{lookup: values[field]})
+    if values.get("unassigned") in {"project", "counterparty"}:
+        entries = entries.filter(**{values["unassigned"]+"__isnull": True})
     if values.get("search"):
         entries = entries.filter(Q(description__icontains=values["search"]) | Q(counterparty__name__icontains=values["search"]))
     ordering = {"newest": "-occurred_on", "oldest": "occurred_on", "largest": "-amount", "smallest": "amount"}

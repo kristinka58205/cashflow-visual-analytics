@@ -27,7 +27,10 @@ from cashflow.transfers import transfer_list
 
 from cashflow.statements import statement_view
 
+from cashflow.dimensions import dimensions
+
 urlpatterns = [
+    path("analytics/dimensions/", dimensions, name="dimensions"),
     path("statement/",statement_view,name="statement"),
     path("transfers/", transfer_list, name="transfer_list"),
     path("forecast/", forecast, name="forecast"),
