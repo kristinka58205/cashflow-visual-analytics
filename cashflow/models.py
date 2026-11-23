@@ -254,3 +254,9 @@ class TransactionReceipt(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["transaction", "sha256"], name="receipt_unique_transaction_content")]
+
+
+class DemoDataset(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    reference_date = models.DateField()
+    version = models.CharField(max_length=20, default="finance-demo-v1")
