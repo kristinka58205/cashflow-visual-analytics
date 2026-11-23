@@ -221,7 +221,7 @@ class LedgerEvent(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     actor_name = models.CharField(max_length=150)
     action = models.CharField(max_length=12, choices=Action.choices)
-    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV"), ("receipt", "Документ операции")])
+    entity = models.CharField(max_length=24, choices=[("catalog", "Справочник"), ("operation", "Операция"), ("budget", "Бюджет"), ("planned_payment", "Плановый платёж"), ("import", "Загрузка CSV"), ("receipt", "Документ операции"), ("reconciliation", "Сверка остатков")])
     object_id = models.PositiveBigIntegerField()
     summary = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -260,3 +260,16 @@ class DemoDataset(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     reference_date = models.DateField()
     version = models.CharField(max_length=20, default="finance-demo-v1")
+
+
+class AccountReconciliation(models.Model):
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT)
+    checked_on = models.DateField("Дата остатка")
+    statement_balance = models.DecimalField("Остаток по выписке, ₽", max_digits=18, decimal_places=2)
+    ledger_balance = models.DecimalField(max_digits=24, decimal_places=2)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        constraints = [models.UniqueConstraint(fields=["account", "checked_on", "statement_balance", "ledger_balance"], name="unique_account_reconciliation_snapshot")]

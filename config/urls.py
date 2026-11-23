@@ -19,7 +19,10 @@ from cashflow.cabinet import cabinet, account_action
 
 from cashflow.documents import cashflow_pdf
 
+from cashflow.reconciliation import reconciliation_list
+
 urlpatterns = [
+    path("reconciliation/", reconciliation_list, name="reconciliation_list"),
     path("reports/cashflow.pdf", cashflow_pdf, name="cashflow_pdf"),
     path("cabinet/", cabinet, name="cabinet_home"),
     path("cabinet/accounts/action/", account_action, name="account_action"),
