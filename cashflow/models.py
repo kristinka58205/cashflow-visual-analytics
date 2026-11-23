@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from .money import CashDecimalField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils import timezone
@@ -52,7 +53,7 @@ class BankAccount(models.Model):
     organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField("Название счёта", max_length=120)
-    opening_balance = models.DecimalField("Начальный остаток, ₽", max_digits=18, decimal_places=2, default=0)
+    opening_balance = CashDecimalField("Начальный остаток, ₽", max_digits=18, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -89,7 +90,7 @@ class CashTransaction(models.Model):
     counterparty = models.ForeignKey(Counterparty, verbose_name="Контрагент", on_delete=models.PROTECT, null=True, blank=True, related_name="transactions")
     project = models.ForeignKey(CashProject, verbose_name="Проект", on_delete=models.PROTECT, null=True, blank=True, related_name="transactions")
     occurred_on = models.DateField("Дата операции", default=timezone.localdate)
-    amount = models.DecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    amount = CashDecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     description = models.CharField("Назначение платежа", max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -116,7 +117,7 @@ class ExpenseBudget(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     category = models.ForeignKey(CashCategory, verbose_name="Статья расходов", on_delete=models.PROTECT, related_name="budgets")
     month_start = models.DateField("Месяц")
-    limit = models.DecimalField("Лимит, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    limit = CashDecimalField("Лимит, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["category", "month_start"], name="budget_unique_category_month"),
@@ -137,7 +138,7 @@ class PlannedPayment(models.Model):
     counterparty = models.ForeignKey(Counterparty, on_delete=models.PROTECT, null=True, blank=True)
     project = models.ForeignKey(CashProject, on_delete=models.PROTECT, null=True, blank=True)
     due_on = models.DateField("Срок платежа")
-    amount = models.DecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    amount = CashDecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     description = models.CharField("Назначение", max_length=500)
     status = models.CharField(max_length=10, choices=[("planned", "В плане"), ("paid", "Оплачен"), ("cancelled", "Отменён")], default="planned")
     transaction = models.OneToOneField(CashTransaction, on_delete=models.PROTECT, null=True, blank=True)
@@ -265,8 +266,8 @@ class DemoDataset(models.Model):
 class AccountReconciliation(models.Model):
     account = models.ForeignKey(BankAccount, on_delete=models.PROTECT)
     checked_on = models.DateField("Дата остатка")
-    statement_balance = models.DecimalField("Остаток по выписке, ₽", max_digits=18, decimal_places=2)
-    ledger_balance = models.DecimalField(max_digits=24, decimal_places=2)
+    statement_balance = CashDecimalField("Остаток по выписке, ₽", max_digits=18, decimal_places=2)
+    ledger_balance = CashDecimalField(max_digits=24, decimal_places=2)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -279,7 +280,7 @@ class CashTransfer(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     from_account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="outgoing_transfers")
     to_account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="incoming_transfers")
-    amount = models.DecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    amount = CashDecimalField("Сумма, ₽", max_digits=18, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     occurred_on = models.DateField("Дата", default=timezone.localdate)
     description = models.CharField("Назначение", max_length=500)
     command_key = models.UUIDField(unique=True)

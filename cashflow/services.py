@@ -1,6 +1,7 @@
 """Денежная арифметика выполняется Decimal, без округлений float."""
 from decimal import Decimal
-from django.db.models import Sum, Q
+from django.db.models import Q
+from .money import CashSum as Sum
 from .models import BankAccount, CashCategory, CashTransaction
 from datetime import date
 from .access import LedgerScope
