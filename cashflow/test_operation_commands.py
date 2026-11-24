@@ -33,7 +33,7 @@ class OperationCommandTests(TestCase):
     def test_deleted_operation_cannot_be_recreated_by_old_post(self):
         self.client.post(self.url, self.values)
         entry = CashTransaction.objects.get()
-        self.client.post(reverse('transaction_delete', args=[entry.pk]))
+        self.client.post(reverse('transaction_delete', args=[entry.pk]), {'expected_revision':entry.revision})
         self.assertContains(self.client.post(self.url, self.values), 'затем удалена')
         self.assertFalse(CashTransaction.objects.exists())
         self.assertIsNone(OperationCommand.objects.get().entry_id)

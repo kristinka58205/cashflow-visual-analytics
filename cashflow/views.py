@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm, TransactionForm, OperationCreateForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
+from .forms import AccountForm, CategoryForm, TransactionForm, OperationCreateForm, OperationEditForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, PlannedPayment
 from .services import financial_summary, filtered_transactions, transaction_totals, cashflow_analysis
 from django.core.paginator import Paginator
@@ -116,12 +116,15 @@ def transaction_edit(request, pk=None):
     if entry and PlannedPayment.objects.filter(transaction=entry).exists():
         messages.error(request, "Операция проведённого планового платежа защищена от прямого изменения.")
         return redirect("transaction_list")
-    form_class = TransactionForm if pk else OperationCreateForm
+    form_class = OperationEditForm if pk else OperationCreateForm
     form = form_class(request.POST if request.method == "POST" else None, owner=request.user,
-                      scope=get_scope(request), instance=entry, initial={"command_key": uuid.uuid4()})
+                      scope=get_scope(request), instance=entry, initial={"command_key": uuid.uuid4(), "expected_revision": entry.revision if entry else None})
     if request.method == "POST" and form.is_valid():
         try:
             if pk:
+                if form.cleaned_data["expected_revision"] != entry.revision:
+                    raise ValidationError("Операция уже изменена в другой вкладке. Откройте актуальную запись заново.")
+                form.instance.revision = entry.revision + 1
                 saved = form.save()
                 record_event(get_scope(request), "updated", "operation", saved.pk, f"{saved.description}: {saved.amount:.2f} ₽")
                 created = True
@@ -140,6 +143,9 @@ def transaction_edit(request, pk=None):
 def transaction_delete(request, pk):
     entry = get_object_or_404(get_scope(request).entries(), pk=pk)
     if request.method == "POST":
+        if request.POST.get("expected_revision") != str(entry.revision):
+            messages.error(request, "Операция изменилась или подтверждение устарело. Проверьте запись и откройте удаление заново.")
+            return redirect("transaction_list")
         object_id, summary = entry.pk, f"{entry.description}: {entry.amount:.2f} ₽"
         try:
             entry.delete()
@@ -149,7 +155,7 @@ def transaction_delete(request, pk):
             record_event(get_scope(request), "deleted", "operation", object_id, summary)
             messages.success(request, "Операция удалена.")
         return redirect("transaction_list")
-    return render(request, "cashflow/confirm_delete.html", {"instance": entry.description})
+    return render(request, "cashflow/confirm_delete.html", {"instance": entry.description, "expected_revision": entry.revision, "cancel_url": "transaction_list"})
 
 
 @login_required

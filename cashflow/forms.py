@@ -82,6 +82,10 @@ class TransactionForm(forms.ModelForm):
             self.fields[field].queryset = self.scope.catalog(model)
 
 
+class OperationEditForm(TransactionForm):
+    expected_revision = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+
+
 class OperationCreateForm(TransactionForm):
     command_key = forms.UUIDField(widget=forms.HiddenInput)
 

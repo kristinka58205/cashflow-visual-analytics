@@ -85,6 +85,7 @@ class CashCategory(models.Model):
 
 
 class CashTransaction(models.Model):
+    revision = models.PositiveIntegerField(default=1, editable=False)
     account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="transactions")
     category = models.ForeignKey(CashCategory, on_delete=models.PROTECT, related_name="transactions")
     counterparty = models.ForeignKey(Counterparty, verbose_name="Контрагент", on_delete=models.PROTECT, null=True, blank=True, related_name="transactions")
