@@ -137,8 +137,23 @@ def verify(app_python, output):
                     duplicates=list(csv.DictReader(io.StringIO(duplicates_csv.read_text(encoding='utf-8-sig')),delimiter=';'))
                     assert len(duplicates)==1 and duplicates[0]['matching_records']=='2' and duplicates[0]['possible_extra']=='0.01'
                     checks.append('possible_duplicates_from_two_distinct_forms');shot('quality-desktop.png')
+                    visit('/operations/?search=Браузерное+совпадение&minimum=0.01')
+                    page.locator('#saved-view-name').fill('Моя сверка')
+                    page.get_by_role('button',name='Сохранить подборку',exact=True).click();page.wait_for_url('**/operations/saved/')
+                    shot('saved-views-desktop.png')
+                    page.get_by_role('link',name='Моя сверка',exact=True).click()
+                    assert page.locator('article.task').count()==2
+                    checks.append('saved_view_restores_filters')
+                    page.locator('article.task').first.get_by_role('link',name='Изменить',exact=True).click()
+                    stale_edit=page.locator('main form').evaluate('(form)=>Object.fromEntries(new FormData(form))')
+                    edit_url=page.url
+                    page.locator('#id_amount').fill('0.02');page.get_by_role('button',name='Сохранить',exact=True).click();page.wait_for_url('**/operations/')
+                    rejected=context.request.post(edit_url,form=stale_edit,headers={'Referer':edit_url})
+                    assert rejected.status==200 and 'уже изменена в другой вкладке' in rejected.text()
+                    page.goto(edit_url);assert page.locator('#id_amount').input_value()=='0.02'
+                    checks.append('stale_operation_form_preserves_new_value')
                     page.set_viewport_size({'width':390,'height':844})
-                    for path,name in [('/operations/','operations-mobile.png'),('/transfers/','transfers-mobile.png'),('/analytics/dimensions/','dimensions-mobile.png'),('/balances/','positions-mobile.png'),('/quality/','quality-mobile.png'),('/forecast/?account='+str(ids['first'])+'&days=7','forecast-mobile.png')]:
+                    for path,name in [('/operations/','operations-mobile.png'),('/operations/saved/','saved-views-mobile.png'),('/transfers/','transfers-mobile.png'),('/analytics/dimensions/','dimensions-mobile.png'),('/balances/','positions-mobile.png'),('/quality/','quality-mobile.png'),('/forecast/?account='+str(ids['first'])+'&days=7','forecast-mobile.png')]:
                         visit(path);shot(name)
                         dimensions=page.evaluate('({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth})')
                         assert dimensions['scroll']<=dimensions['width']+1,(path,dimensions)

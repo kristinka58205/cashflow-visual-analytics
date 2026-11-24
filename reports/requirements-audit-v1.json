@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_head": "f29a8e7df5b2e53a1bcf0388f17a1fb38dffe13e",
+  "source_head": "ff133b4c016987bd44c67fb37ef53cedc957660d",
   "code_counts": [
     {
       "file": "cashflow/__init__.py",
@@ -83,8 +83,8 @@
     {
       "file": "cashflow/forms.py",
       "metric": "python_ast_statements",
-      "count": 107,
-      "sha256": "5ca6dcd91d3a68b61b7764565c68911632985a0c3b04763280a95e1911e3ada7"
+      "count": 109,
+      "sha256": "50fee9ded9903f37cbc3790f9e19eace1440a046dd098b2104d285955fc47129"
     },
     {
       "file": "cashflow/imports.py",
@@ -113,8 +113,8 @@
     {
       "file": "cashflow/models.py",
       "metric": "python_ast_statements",
-      "count": 233,
-      "sha256": "1cac9c3bb37b86e68a307cd1e73f57dbffc3d1cc8443a2eb982811232d1e41a4"
+      "count": 243,
+      "sha256": "6814013491b8340acf75a57e6ad446eddf7253e23f697ea9ea877a280bd64063"
     },
     {
       "file": "cashflow/money.py",
@@ -169,6 +169,12 @@
       "metric": "python_ast_statements",
       "count": 63,
       "sha256": "f76bf955008c4f3183f8c687b96bf84393dc5084a838ef2346feac7734abc72f"
+    },
+    {
+      "file": "cashflow/saved_views.py",
+      "metric": "python_ast_statements",
+      "count": 75,
+      "sha256": "6b6efeba7df49f3d8bd7866267bbb1c86897baf0ada53312191b658337cc5450"
     },
     {
       "file": "cashflow/services.py",
@@ -234,7 +240,7 @@
       "file": "cashflow/templates/cashflow/confirm_delete.html",
       "metric": "nonempty_markup_style_lines",
       "count": 1,
-      "sha256": "b3dae6d503d091933975942f2326a1001637bbf2f7a32767122daaf7b5be7d0a"
+      "sha256": "b167b9a26269e0c7bf5bcedda3b6ac69455a1e72b8a36c03f08b23beed3085e7"
     },
     {
       "file": "cashflow/templates/cashflow/dashboard.html",
@@ -315,6 +321,12 @@
       "sha256": "a79c321056a65f3fdfacf2407d58d135d404789d621db27c1c836d5241a04e70"
     },
     {
+      "file": "cashflow/templates/cashflow/saved_views.html",
+      "metric": "nonempty_markup_style_lines",
+      "count": 7,
+      "sha256": "64853f40520f289ef6d5e7c5427e2338457ec25483bb8623bc1c1e9ab2ebd012"
+    },
+    {
       "file": "cashflow/templates/cashflow/transaction_form.html",
       "metric": "nonempty_markup_style_lines",
       "count": 1,
@@ -323,8 +335,8 @@
     {
       "file": "cashflow/templates/cashflow/transactions.html",
       "metric": "nonempty_markup_style_lines",
-      "count": 4,
-      "sha256": "9d91c14700d6544bb21a63012a4756b1eb7b4c993c8f47205b385823b852d554"
+      "count": 5,
+      "sha256": "406d305d5572ad4fbe328b5dbbe66a1b1a3d4ad0c24ad387a9f42ca11aae142b"
     },
     {
       "file": "cashflow/transfers.py",
@@ -335,8 +347,8 @@
     {
       "file": "cashflow/views.py",
       "metric": "python_ast_statements",
-      "count": 112,
-      "sha256": "75492a70d3c3aa941c67392c2d6dc54c86789339fc1e38e1ab4e69238117a090"
+      "count": 118,
+      "sha256": "fc8ecca780fc9a89a3a99f73ebef9c65f601d5e972b3ed68a771e647abc869b4"
     },
     {
       "file": "config/__init__.py",
@@ -365,8 +377,8 @@
     {
       "file": "config/urls.py",
       "metric": "python_ast_statements",
-      "count": 23,
-      "sha256": "818fa15c1ae1bd74c0219d1d724733b1cf8b7f8b435327129d789bcf3efa55ec"
+      "count": 24,
+      "sha256": "33cf1f68c66316fbd042b109286fc39bbe0df30e2514830005f30c1d4a6c0db2"
     },
     {
       "file": "config/wsgi.py",
@@ -435,7 +447,7 @@
       "sha256": "907fb85bd49494bb3f3642437c20c76666ec74cc870cc9772d2352b7a54bdb3d"
     }
   ],
-  "mixed_code_units": 2255,
+  "mixed_code_units": 2357,
   "method": "Python AST statements excluding docstrings/tests/migrations; HTML/CSS nonempty lines excluding comments. Different units are reported separately; not a standardized logical-line certification.",
   "application_models": [
     {
@@ -490,6 +502,7 @@
       "table": "cashflow_cashtransaction",
       "fields": [
         "id",
+        "revision",
         "account",
         "category",
         "counterparty",
@@ -672,12 +685,25 @@
         "entry",
         "created_at"
       ]
+    },
+    {
+      "model": "SavedTransactionView",
+      "table": "cashflow_savedtransactionview",
+      "fields": [
+        "id",
+        "owner",
+        "organization",
+        "name",
+        "filters",
+        "created_at"
+      ]
     }
   ],
   "domain_table_count": 16,
   "technical_models": [
     "DemoDataset",
-    "OperationCommand"
+    "OperationCommand",
+    "SavedTransactionView"
   ],
   "public_guides": [
     {
@@ -749,6 +775,7 @@
   ],
   "private_pages": [
     "/operations/",
+    "/operations/saved/",
     "/catalog/",
     "/analytics/",
     "/budgets/",
