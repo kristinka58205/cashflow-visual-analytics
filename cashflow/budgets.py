@@ -5,7 +5,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from .forms import BudgetForm, BudgetMonthForm
+from .forms import BudgetForm, BudgetMonthForm, RevisionForm
+from .revisions import require_revision
+from django.core.exceptions import ValidationError
 from .models import ExpenseBudget, CashTransaction
 from .access import LedgerScope, get_scope, financial_write
 from .audit import record_event
@@ -38,10 +40,16 @@ def budget_edit(request, pk=None):
     instance = get_object_or_404(get_scope(request).budgets(), pk=pk) if pk else None
     form = BudgetForm(request.POST if request.method == "POST" else None, owner=request.user, scope=get_scope(request), instance=instance)
     if request.method == "POST" and form.is_valid():
-        saved = form.save()
-        record_event(get_scope(request), "updated" if pk else "created", "budget", saved.pk, f"{saved.category}: {saved.limit:.2f} ₽, {saved.month_start:%m.%Y}")
-        messages.success(request, "Месячный лимит сохранён.")
-        return redirect("budget_list")
+        try:
+            if pk:require_revision(instance,form.cleaned_data['expected_revision'])
+        except ValidationError as exc:
+            form.add_error(None,exc)
+        else:
+            if pk:instance.revision+=1
+            saved=form.save()
+            record_event(get_scope(request), "updated" if pk else "created", "budget", saved.pk, f"{saved.category}: {saved.limit:.2f} ₽, {saved.month_start:%m.%Y}")
+            messages.success(request, "Месячный лимит сохранён.")
+            return redirect("budget_list")
     return render(request, "cashflow/budget_form.html", {"form": form})
 
 
@@ -49,9 +57,13 @@ def budget_edit(request, pk=None):
 @financial_write
 def budget_delete(request, pk):
     budget = get_object_or_404(get_scope(request).budgets(), pk=pk)
-    if request.method == "POST":
-        object_id, summary = budget.pk, f"{budget.category}: {budget.limit:.2f} ₽"
-        budget.delete()
-        record_event(get_scope(request), "deleted", "budget", object_id, summary)
-        return redirect("budget_list")
-    return render(request, "cashflow/budget_form.html", {"budget": budget})
+    form=RevisionForm(request.POST if request.method=='POST' else None,initial={'expected_revision':budget.revision})
+    if request.method=='POST' and form.is_valid():
+        try:require_revision(budget,form.cleaned_data['expected_revision'])
+        except ValidationError as exc:form.add_error(None,exc)
+        else:
+            object_id, summary = budget.pk, f"{budget.category}: {budget.limit:.2f} ₽"
+            budget.delete()
+            record_event(get_scope(request), "deleted", "budget", object_id, summary)
+            return redirect("budget_list")
+    return render(request, "cashflow/budget_form.html", {"budget": budget,"form":form})

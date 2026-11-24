@@ -115,6 +115,7 @@ class CashTransaction(models.Model):
 
 
 class ExpenseBudget(models.Model):
+    revision = models.PositiveIntegerField(default=1, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     category = models.ForeignKey(CashCategory, verbose_name="Статья расходов", on_delete=models.PROTECT, related_name="budgets")
     month_start = models.DateField("Месяц")

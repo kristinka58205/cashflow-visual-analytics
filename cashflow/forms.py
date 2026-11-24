@@ -8,6 +8,9 @@ class OwnedForm(forms.ModelForm):
     def __init__(self, *args, owner, scope=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.scope = scope or LedgerScope(owner)
+        if hasattr(self.instance,'revision'):
+            self.fields['expected_revision']=forms.IntegerField(min_value=1,required=bool(self.instance.pk),
+                initial=self.instance.revision if self.instance.pk else None,widget=forms.HiddenInput)
         if not self.instance.pk:
             self.instance.owner = owner
             if hasattr(self.instance, "organization_id"):
