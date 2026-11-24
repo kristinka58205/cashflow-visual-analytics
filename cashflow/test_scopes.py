@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from .access import LedgerScope, write_scope
 from .budgets import budget_overview
-from .imports import parse_import, apply_import
+from .imports import parse_import, apply_import, preview_fingerprint
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, ExpenseBudget, ImportBatch, OrganizationMembership, PlannedPayment
 from .organizations import create_organization
 from .payments import execute_payment
@@ -96,8 +96,8 @@ class SharedLedgerTests(TestCase):
         self.assertEqual(first.pk, execute_payment(self.owner, payment.pk, self.today, scope=LedgerScope(self.owner, self.organization)).pk)
         payload = ("date;account;category;kind;amount;description;counterparty;project\n"+f"{self.today};Main;Sales;income;10.10;Imported;;\n").encode()
         rows = parse_import(self.editor, payload, scope=scope)
-        batch = ImportBatch.objects.create(owner=self.owner, organization=self.organization, filename="shared.csv", sha256="a"*64, rows=rows)
-        apply_import(self.editor, batch.pk, scope=scope)
+        batch = ImportBatch.objects.create(owner=self.owner, organization=self.organization, filename="shared.csv", sha256="a"*64, rows=rows, preview_sha256=preview_fingerprint(scope,rows))
+        apply_import(self.editor, batch.pk, scope=scope, expected_preview=batch.preview_sha256)
         apply_import(self.owner, batch.pk, scope=LedgerScope(self.owner, self.organization))
         self.assertEqual(CashTransaction.objects.count(), 2)
 

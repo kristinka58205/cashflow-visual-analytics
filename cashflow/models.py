@@ -155,6 +155,7 @@ class PlannedPayment(models.Model):
 
 
 class ImportBatch(models.Model):
+    preview_sha256 = models.CharField(max_length=64, blank=True, default="")
     organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     filename = models.CharField(max_length=120)

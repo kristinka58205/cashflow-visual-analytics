@@ -2,6 +2,7 @@
 import csv
 import hashlib
 import io
+import json
 from pathlib import Path
 from django import forms
 from django.contrib import messages
@@ -23,6 +24,7 @@ class ImportForm(forms.Form):
 
 
 class ConfirmImportForm(forms.Form):
+    expected_preview = forms.CharField(min_length=64, max_length=64, widget=forms.HiddenInput)
     allow_repeats = forms.BooleanField(label="Подтверждаю повторяющиеся или совпадающие с журналом строки", required=False)
 
 
@@ -65,6 +67,52 @@ def parse_import(user, contents, scope=None):
         raise ValidationError("Не удалось прочитать CSV UTF-8 с разделителем ;.") from exc
 
 
+ROW_FIELDS={'account_id','category_id','counterparty_id','project_id','occurred_on','amount','description'}
+
+
+def checked_rows(rows):
+    if not isinstance(rows,list) or not 1<=len(rows)<=500:
+        raise ValidationError('Повреждён предварительный просмотр. Загрузите исходный файл заново.')
+    for row in rows:
+        if not isinstance(row,dict) or set(row)!=ROW_FIELDS:
+            raise ValidationError('Повреждён состав колонок импорта. Загрузите файл заново.')
+        for field in ['account_id','category_id','counterparty_id','project_id']:
+            value=row[field]
+            if value is None and field in {'counterparty_id','project_id'}:continue
+            if type(value) is not int or value<=0:raise ValidationError('Повреждены ссылки предварительного просмотра.')
+        if any(not isinstance(row[field],str) for field in ['occurred_on','amount','description']):
+            raise ValidationError('Повреждены значения предварительного просмотра.')
+    return rows
+
+
+def preview_fingerprint(scope,rows):
+    checked_rows(rows)
+    references={}
+    for field,model,columns in [
+        ('account_id',BankAccount,['pk','name']),('category_id',CashCategory,['pk','name','kind']),
+        ('counterparty_id',Counterparty,['pk','name','tax_id']),('project_id',CashProject,['pk','name','code'])]:
+        identifiers={row[field] for row in rows if row[field] is not None}
+        values=list(scope.catalog(model).filter(pk__in=identifiers).order_by('pk').values(*columns))
+        if len(values)!=len(identifiers):raise ValidationError('Справочник из предварительного просмотра больше недоступен. Загрузите файл заново.')
+        references[field]=values
+    content=json.dumps({'rows':rows,'references':references},sort_keys=True,ensure_ascii=False,allow_nan=False).encode()
+    return hashlib.sha256(content).hexdigest()
+
+
+def stage_import(user,contents,filename,scope=None):
+    with write_scope(user,scope) as scope:
+        rows=parse_import(user,contents,scope)
+        fingerprint=preview_fingerprint(scope,rows)
+        batch,created=scope.imports().get_or_create(sha256=hashlib.sha256(contents).hexdigest(),
+            defaults={'owner':user,'organization':scope.organization,'filename':Path(filename).name[:120],
+                      'rows':rows,'preview_sha256':fingerprint})
+        if not batch.applied_at and batch.preview_sha256!=fingerprint:
+            batch.rows=rows;batch.preview_sha256=fingerprint
+            batch.save(update_fields=['rows','preview_sha256'])
+        if created:record_event(scope,'created','import',batch.pk,f'{batch.filename}: предварительная проверка {len(rows)} строк')
+        return batch
+
+
 def repeated_rows(rows):
     seen, repeats = set(), 0
     for row in rows:
@@ -76,11 +124,14 @@ def repeated_rows(rows):
 
 
 @transaction.atomic
-def apply_import(user, pk, allow_repeats=False, scope=None):
+def apply_import(user, pk, allow_repeats=False, scope=None, expected_preview=None):
     with write_scope(user, scope) as scope:
         batch = get_object_or_404(scope.imports().select_for_update(), pk=pk)
+        checked_rows(batch.rows)
         if batch.applied_at:
             return len(batch.rows)
+        if not batch.preview_sha256 or expected_preview!=batch.preview_sha256 or preview_fingerprint(scope,batch.rows)!=batch.preview_sha256:
+            raise ValidationError("Предварительный просмотр устарел: данные или справочники изменились. Загрузите исходный файл заново и проверьте новый просмотр.")
         if repeated_rows(batch.rows) and not allow_repeats:
             raise ValidationError("Есть повторяющиеся операции. Проверьте их и подтвердите отдельным флажком.")
         for row in batch.rows:
@@ -103,14 +154,10 @@ def import_upload(request):
         upload = form.cleaned_data["file"]
         contents = upload.read(1024*1024+1)
         try:
-            rows = parse_import(request.user, contents, scope=get_scope(request))
+            batch = stage_import(request.user, contents, upload.name, scope=get_scope(request))
         except ValidationError as exc:
             form.add_error("file", exc)
         else:
-            batch, created = get_scope(request).imports().get_or_create(sha256=hashlib.sha256(contents).hexdigest(),
-                defaults={"owner": request.user, "organization": get_scope(request).organization, "filename": Path(upload.name).name[:120], "rows": rows})
-            if created:
-                record_event(get_scope(request), "created", "import", batch.pk, f"{batch.filename}: предварительная проверка {len(rows)} строк")
             return redirect("import_preview", pk=batch.pk)
     batches = get_scope(request).imports().order_by("-pk")[:10]
     return render(request, "cashflow/import_upload.html", {"form": form, "batches": batches})
@@ -120,7 +167,7 @@ def import_upload(request):
 @financial_write
 def import_preview(request, pk):
     batch = get_object_or_404(get_scope(request).imports(), pk=pk)
-    form = ConfirmImportForm(request.POST if request.method == "POST" else None)
+    form = ConfirmImportForm(request.POST if request.method == "POST" else None, initial={"expected_preview":batch.preview_sha256})
     if request.method == "POST" and form.is_valid():
         try:
             count = apply_import(request.user, pk, scope=get_scope(request), **form.cleaned_data)
@@ -129,6 +176,12 @@ def import_preview(request, pk):
         else:
             messages.success(request, f"Импорт выполнен однократно: {count} операций.")
             return redirect("transaction_list")
+    try:
+        checked_rows(batch.rows)
+        if not batch.applied_at and (not batch.preview_sha256 or preview_fingerprint(get_scope(request),batch.rows)!=batch.preview_sha256):
+            raise ValidationError('Предварительный просмотр устарел. Загрузите исходный файл заново.')
+    except ValidationError as exc:
+        return render(request,"cashflow/import_preview.html",{"batch":batch,"form":None,"import_error":" ".join(exc.messages),"preview":[],"repeats":0},status=409)
     accounts = dict(get_scope(request).catalog(BankAccount).values_list("pk", "name"))
     categories = dict(get_scope(request).catalog(CashCategory).values_list("pk", "name"))
     preview = [{**row, "account_name": accounts.get(row["account_id"], "Удалённый счёт"),
