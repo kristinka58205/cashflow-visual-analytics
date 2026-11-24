@@ -134,6 +134,7 @@ class ExpenseBudget(models.Model):
 
 
 class PlannedPayment(models.Model):
+    revision = models.PositiveIntegerField(default=1, editable=False)
     account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="planned_payments")
     category = models.ForeignKey(CashCategory, on_delete=models.PROTECT, related_name="planned_payments")
     counterparty = models.ForeignKey(Counterparty, on_delete=models.PROTECT, null=True, blank=True)

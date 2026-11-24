@@ -90,14 +90,26 @@ class OperationCreateForm(TransactionForm):
     command_key = forms.UUIDField(widget=forms.HiddenInput)
 
 
+class RevisionForm(forms.Form):
+    expected_revision = forms.IntegerField(min_value=1,widget=forms.HiddenInput)
+
+
 class PaymentForm(TransactionForm):
+    expected_revision = forms.IntegerField(min_value=1,required=False,widget=forms.HiddenInput)
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        if self.instance.pk:
+            self.fields['expected_revision'].required=True
+            self.fields['expected_revision'].initial=self.instance.revision
+
     class Meta:
         model = PlannedPayment
         fields = ["account", "category", "counterparty", "project", "due_on", "amount", "description"]
         widgets = {"due_on": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})}
 
 
-class PaymentExecutionForm(forms.Form):
+class PaymentExecutionForm(RevisionForm):
     occurred_on = forms.DateField(label="Фактическая дата", widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
 
 

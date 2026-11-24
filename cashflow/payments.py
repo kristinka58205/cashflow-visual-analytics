@@ -8,19 +8,25 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from .forms import PaymentForm, PaymentExecutionForm
+from .forms import PaymentForm, PaymentExecutionForm, RevisionForm
 from .models import PlannedPayment, CashTransaction, BankAccount
 from .access import LedgerScope, get_scope, financial_write, write_scope
 from .audit import record_event
+from .revisions import require_revision
 
 
 @transaction.atomic
-def save_payment(user, payment, scope=None):
+def save_payment(user, payment, scope=None, expected_revision=None):
     with write_scope(user, scope) as scope:
         if not scope.catalog(BankAccount).filter(pk=payment.account_id).exists():
             raise PermissionDenied
-        if payment.pk and not scope.payments().filter(pk=payment.pk, status="planned").exists():
-            raise ValidationError("Платёж уже проведён или отменён; изменение плана невозможно.")
+        if payment.status!='planned' or payment.transaction_id is not None:
+            raise ValidationError('Нельзя изменить состояние платежа через редактор плана.')
+        if payment.pk:
+            current=get_object_or_404(scope.payments().select_for_update(),pk=payment.pk)
+            if current.status!='planned':raise ValidationError('Платёж уже проведён или отменён; изменение плана невозможно.')
+            require_revision(current,expected_revision)
+            payment.revision=current.revision+1
         action = "updated" if payment.pk else "created"
         payment.full_clean()
         payment.save()
@@ -28,19 +34,21 @@ def save_payment(user, payment, scope=None):
 
 
 @transaction.atomic
-def execute_payment(user, pk, occurred_on, scope=None):
+def execute_payment(user, pk, occurred_on, scope=None, expected_revision=None):
     with write_scope(user, scope) as scope:
         payment = get_object_or_404(scope.payments().select_for_update(), pk=pk)
         if payment.status == "paid":
             return payment.transaction
         if payment.status != "planned":
             raise ValidationError("Отменённый платёж нельзя провести.")
+        require_revision(payment,expected_revision)
         entry = CashTransaction(account=payment.account, category=payment.category, counterparty=payment.counterparty,
             project=payment.project, amount=payment.amount, description=payment.description, occurred_on=occurred_on)
         entry.full_clean()
         entry.save()
         payment.status, payment.transaction = "paid", entry
-        payment.save(update_fields=["status", "transaction"])
+        payment.revision+=1
+        payment.save(update_fields=["status", "transaction", "revision"])
         record_event(scope, "paid", "planned_payment", payment.pk, f"{payment.description}: {payment.amount:.2f} ₽")
         record_event(scope, "created", "operation", entry.pk, f"Плановый платёж: {entry.description}")
         return entry
@@ -67,7 +75,7 @@ def payment_edit(request, pk=None):
     form = PaymentForm(request.POST if request.method == "POST" else None, instance=instance, owner=request.user, scope=get_scope(request))
     if request.method == "POST" and form.is_valid():
         try:
-            save_payment(request.user, form.save(commit=False), scope=get_scope(request))
+            save_payment(request.user, form.save(commit=False), scope=get_scope(request), expected_revision=form.cleaned_data.get("expected_revision"))
         except ValidationError as exc:
             form.add_error(None, exc)
         else:
@@ -79,7 +87,7 @@ def payment_edit(request, pk=None):
 @financial_write
 def payment_execute(request, pk):
     payment = get_object_or_404(get_scope(request).payments(), pk=pk)
-    form = PaymentExecutionForm(request.POST if request.method == "POST" else None, initial={"occurred_on": timezone.localdate()})
+    form = PaymentExecutionForm(request.POST if request.method == "POST" else None, initial={"occurred_on": timezone.localdate(),"expected_revision":payment.revision})
     if request.method == "POST" and form.is_valid():
         try:
             execute_payment(request.user, pk, scope=get_scope(request), **form.cleaned_data)
@@ -96,10 +104,16 @@ def payment_execute(request, pk):
 @financial_write
 @transaction.atomic
 def payment_cancel(request, pk):
-    get_user_model().objects.select_for_update().get(pk=request.user.pk)
     payment = get_object_or_404(get_scope(request).payments(), pk=pk)
-    if payment.status == "planned":
-        payment.status = "cancelled"
-        payment.save(update_fields=["status"])
-        record_event(get_scope(request), "cancelled", "planned_payment", payment.pk, payment.description)
-    return redirect("payment_list")
+    form=RevisionForm(request.POST)
+    if payment.status=='planned':
+        try:
+            if not form.is_valid():raise ValidationError('Некорректная версия формы. Обновите список платежей.')
+            require_revision(payment,form.cleaned_data['expected_revision'])
+        except ValidationError as exc:
+            messages.error(request,' '.join(exc.messages))
+        else:
+            payment.status='cancelled';payment.revision+=1
+            payment.save(update_fields=['status','revision'])
+            record_event(get_scope(request),'cancelled','planned_payment',payment.pk,payment.description)
+    return redirect('payment_list')

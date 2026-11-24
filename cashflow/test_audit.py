@@ -46,7 +46,7 @@ class AuditTests(TestCase):
     def test_repeated_payment_does_not_duplicate_events(self):
         payment = PlannedPayment.objects.create(account=self.account, category=self.category, amount="10", due_on=timezone.localdate(), description="Payment")
         scope = LedgerScope(self.owner, self.organization)
-        execute_payment(self.owner, payment.pk, timezone.localdate(), scope=scope)
-        execute_payment(self.owner, payment.pk, timezone.localdate(), scope=scope)
+        execute_payment(self.owner, payment.pk, timezone.localdate(), scope=scope, expected_revision=1)
+        execute_payment(self.owner, payment.pk, timezone.localdate(), scope=scope, expected_revision=1)
         self.assertEqual(scope.events().filter(action="paid").count(), 1)
         self.assertEqual(scope.events().count(), 2)

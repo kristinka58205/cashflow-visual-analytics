@@ -92,8 +92,8 @@ class SharedLedgerTests(TestCase):
     def test_payment_and_import_are_shared_and_idempotent(self):
         scope = LedgerScope(self.editor, self.organization)
         payment = PlannedPayment.objects.create(account=self.account, category=self.category, due_on=self.today, amount="5.10", description="Planned")
-        first = execute_payment(self.editor, payment.pk, self.today, scope=scope)
-        self.assertEqual(first.pk, execute_payment(self.owner, payment.pk, self.today, scope=LedgerScope(self.owner, self.organization)).pk)
+        first = execute_payment(self.editor, payment.pk, self.today, scope=scope, expected_revision=1)
+        self.assertEqual(first.pk, execute_payment(self.owner, payment.pk, self.today, scope=LedgerScope(self.owner, self.organization), expected_revision=1).pk)
         payload = ("date;account;category;kind;amount;description;counterparty;project\n"+f"{self.today};Main;Sales;income;10.10;Imported;;\n").encode()
         rows = parse_import(self.editor, payload, scope=scope)
         batch = ImportBatch.objects.create(owner=self.owner, organization=self.organization, filename="shared.csv", sha256="a"*64, rows=rows, preview_sha256=preview_fingerprint(scope,rows))

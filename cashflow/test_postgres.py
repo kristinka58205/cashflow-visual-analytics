@@ -36,7 +36,7 @@ class PaymentConcurrencyTests(TransactionTestCase):
                 local_user=get_user_model().objects.get(pk=user.pk)
                 local_scope=LedgerScope(local_user,org)
                 barrier.wait(timeout=10)
-                result=execute_payment(local_user,payment.pk,date(2026,1,1),scope=local_scope)
+                result=execute_payment(local_user,payment.pk,date(2026,1,1),scope=local_scope, expected_revision=1)
                 return result.pk
             finally:
                 connections.close_all()
