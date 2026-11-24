@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "server_version": "16.14 (Homebrew)",
+  "source_head": "cfbca819ede4b439122eaf00b6eddf362fe7d220",
+  "command": "main.py test --verbosity 0 --noinput",
+  "backend": "isolated local PostgreSQL",
+  "test_output": "System check identified no issues (0 silenced).\n----------------------------------------------------------------------\nRan 96 tests in 1.845s\n\nOK\n",
+  "limits": [
+    "Full suite includes the existing two-connection scenario. New command replay cases use sequential requests; no claim of a new concurrent replay stress test."
+  ]
+}
