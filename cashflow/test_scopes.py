@@ -59,7 +59,7 @@ class SharedLedgerTests(TestCase):
         self.client.post(reverse("transaction_create"), {"command_key": uuid4(), "account": self.account.pk, "category": category.pk,
             "amount": "12.34", "occurred_on": self.today, "description": "Оплата"})
         self.assertEqual(CashTransaction.objects.get().amount, Decimal("12.34"))
-        self.client.post(reverse("catalog_edit", args=["accounts", self.account.pk]), {"name": "Main shared", "opening_balance": "20"})
+        self.client.post(reverse("catalog_edit", args=["accounts", self.account.pk]), {"name": "Main shared", "opening_balance": "20","expected_revision":1})
         self.account.refresh_from_db();self.assertEqual(self.account.owner, self.owner)
 
     def test_readonly_role_cannot_mutate_any_finance_workflow(self):

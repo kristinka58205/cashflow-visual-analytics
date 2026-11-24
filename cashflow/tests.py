@@ -49,7 +49,7 @@ class CatalogTests(TestCase):
         url = reverse("catalog_delete", args=["categories", category.pk])
         self.assertEqual(self.client.get(url).status_code, 200)
         self.assertTrue(CashCategory.objects.exists())
-        self.client.post(url)
+        self.client.post(url,{"expected_revision":1})
         self.assertFalse(CashCategory.objects.exists())
 
 
@@ -91,9 +91,9 @@ class TransactionTests(TestCase):
 
     def test_category_direction_and_references_protected(self):
         self.post_entry()
-        response = self.client.post(reverse("catalog_edit", args=["categories", self.income.pk]), {"name": "Продажи", "kind": "expense"})
+        response = self.client.post(reverse("catalog_edit", args=["categories", self.income.pk]), {"name": "Продажи", "kind": "expense","expected_revision":1})
         self.assertContains(response, "менять нельзя")
-        self.client.post(reverse("catalog_delete", args=["accounts", self.account.pk]))
+        self.client.post(reverse("catalog_delete", args=["accounts", self.account.pk]),{"expected_revision":1})
         self.assertTrue(BankAccount.objects.filter(pk=self.account.pk).exists())
 
     def test_foreign_entries_are_inaccessible(self):

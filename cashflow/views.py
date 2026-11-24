@@ -8,13 +8,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.deletion import ProtectedError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import AccountForm, CategoryForm, TransactionForm, OperationCreateForm, OperationEditForm, CounterpartyForm, ProjectForm, TransactionFilterForm, AnalysisPeriodForm
+from .forms import AccountForm, CategoryForm, TransactionForm, OperationCreateForm, OperationEditForm, CounterpartyForm, ProjectForm, RevisionForm, TransactionFilterForm, AnalysisPeriodForm
 from .models import BankAccount, CashCategory, CashTransaction, Counterparty, CashProject, PlannedPayment
 from .services import financial_summary, filtered_transactions, transaction_totals, cashflow_analysis
 from django.core.paginator import Paginator
 from django.utils import timezone
 from .access import get_scope, financial_write
 from .audit import record_event
+from .revisions import require_revision
 
 
 def home(request):
@@ -66,17 +67,23 @@ def catalog_edit(request, kind, pk=None):
     instance = get_object_or_404(get_scope(request).catalog(model), pk=pk) if pk else model(owner=request.user, organization=get_scope(request).organization)
     form = form_class(request.POST if request.method == "POST" else None, owner=request.user, scope=get_scope(request), instance=instance)
     if request.method == "POST" and form.is_valid():
-        # Проверка уникальности с owner нужна до записи; owner не является полем формы.
-        duplicates = get_scope(request).catalog(model).filter(name=form.cleaned_data["name"])
-        if model is CashCategory:
-            duplicates = duplicates.filter(kind=form.cleaned_data["kind"])
-        if duplicates.exclude(pk=instance.pk).exists():
-            form.add_error("name", "Такое название уже используется.")
+        try:
+            if pk:require_revision(instance,form.cleaned_data['expected_revision'])
+        except ValidationError as exc:
+            form.add_error(None,exc)
         else:
-            saved = form.save()
-            record_event(get_scope(request), "updated" if pk else "created", "catalog", saved.pk, f"{title}: {saved}")
-            messages.success(request, "Изменения сохранены.")
-            return redirect("catalog")
+            # Проверка уникальности с owner нужна до записи; owner не является полем формы.
+            duplicates = get_scope(request).catalog(model).filter(name=form.cleaned_data["name"])
+            if model is CashCategory:
+                duplicates = duplicates.filter(kind=form.cleaned_data["kind"])
+            if duplicates.exclude(pk=instance.pk).exists():
+                form.add_error("name", "Такое название уже используется.")
+            else:
+                if pk:instance.revision+=1
+                saved = form.save()
+                record_event(get_scope(request), "updated" if pk else "created", "catalog", saved.pk, f"{title}: {saved}")
+                messages.success(request, "Изменения сохранены.")
+                return redirect("catalog")
     return render(request, "cashflow/catalog_form.html", {"form": form, "heading": title})
 
 
@@ -85,7 +92,14 @@ def catalog_edit(request, kind, pk=None):
 def catalog_delete(request, kind, pk):
     model, _, _ = catalog_type(kind)
     instance = get_object_or_404(get_scope(request).catalog(model), pk=pk)
+    form=RevisionForm(request.POST if request.method=='POST' else None,initial={'expected_revision':instance.revision})
     if request.method == "POST":
+        try:
+            if not form.is_valid():raise ValidationError('Некорректная версия формы. Обновите справочники.')
+            require_revision(instance,form.cleaned_data['expected_revision'])
+        except ValidationError as exc:
+            messages.error(request,' '.join(exc.messages))
+            return redirect('catalog')
         object_id, summary = instance.pk, str(instance)
         try:
             instance.delete()
@@ -95,7 +109,7 @@ def catalog_delete(request, kind, pk):
             record_event(get_scope(request), "deleted", "catalog", object_id, summary)
             messages.success(request, "Запись удалена.")
         return redirect("catalog")
-    return render(request, "cashflow/confirm_delete.html", {"instance": instance})
+    return render(request, "cashflow/confirm_delete.html", {"instance": instance,"form":form})
 
 
 @login_required

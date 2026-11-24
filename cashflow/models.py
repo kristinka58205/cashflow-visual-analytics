@@ -25,6 +25,7 @@ def same_ledger(first, second):
 
 
 class BusinessReference(models.Model):
+    revision = models.PositiveIntegerField(default=1, editable=False)
     organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField("Название", max_length=120)
@@ -50,6 +51,7 @@ class CashProject(BusinessReference):
 
 
 class BankAccount(models.Model):
+    revision = models.PositiveIntegerField(default=1, editable=False)
     organization = models.ForeignKey("Organization", on_delete=models.PROTECT, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField("Название счёта", max_length=120)
@@ -66,6 +68,7 @@ class BankAccount(models.Model):
 
 
 class CashCategory(models.Model):
+    revision = models.PositiveIntegerField(default=1, editable=False)
     class Kind(models.TextChoices):
         INCOME = "income", "Поступление"
         EXPENSE = "expense", "Расход"

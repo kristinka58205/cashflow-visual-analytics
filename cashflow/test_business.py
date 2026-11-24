@@ -27,7 +27,7 @@ class BusinessCatalogTests(TestCase):
             field = "counterparty" if model is Counterparty else "project"
             CashTransaction.objects.create(account=self.account, category=self.category,
                 amount="15.00", description="История", **{field: item})
-            self.client.post(reverse("catalog_delete", args=[kind, item.pk]))
+            self.client.post(reverse("catalog_delete", args=[kind, item.pk]),{"expected_revision":item.revision})
             self.assertTrue(model.objects.filter(pk=item.pk).exists())
 
     def test_tax_id_and_duplicate_validation(self):
@@ -53,3 +53,19 @@ class BusinessCatalogTests(TestCase):
         entry.full_clean()
         entry.save()
         self.assertContains(self.client.get(reverse("transaction_list")), "Без аналитик")
+
+    def test_all_catalog_editors_and_deletions_check_opened_revision(self):
+        for kind,model,extra in [('accounts',BankAccount,{'opening_balance':'50.10'}),
+            ('categories',CashCategory,{'kind':'income'}),('counterparties',Counterparty,{'tax_id':'1234567890'}),
+            ('projects',CashProject,{'code':'NEW'})]:
+            with self.subTest(kind=kind):
+                item=model.objects.create(owner=self.user,name='Old '+kind,**extra)
+                payload={'name':'New '+kind,**extra,'expected_revision':1}
+                url=reverse('catalog_edit',args=[kind,item.pk])
+                self.assertEqual(self.client.post(url,payload).status_code,302)
+                self.assertContains(self.client.post(url,{**payload,'name':'Stale '+kind}),'уже изменилась')
+                delete=reverse('catalog_delete',args=[kind,item.pk])
+                self.client.post(delete,{'expected_revision':1})
+                item.refresh_from_db();self.assertEqual((item.name,item.revision),('New '+kind,2))
+                self.assertEqual(self.client.post(delete,{'expected_revision':2}).status_code,302)
+                self.assertFalse(model.objects.filter(pk=item.pk).exists())

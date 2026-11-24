@@ -31,7 +31,7 @@ class BudgetTests(TestCase):
         self.assertEqual(row["remaining"], Decimal("-0.01"))
         self.assertTrue(row["exceeded"])
         self.assertEqual(self.client.get(reverse("budget_list"), {"month": "bad"}).status_code, 200)
-        self.client.post(reverse("catalog_edit", args=["categories", self.category.pk]), {"name": "Аренда", "kind": "income"})
+        self.client.post(reverse("catalog_edit", args=["categories", self.category.pk]), {"name": "Аренда", "kind": "income","expected_revision":1})
         self.category.refresh_from_db();self.assertEqual(self.category.kind, "expense")
         self.client.force_login(self.other)
         self.assertEqual(budget_overview(self.other, date(2026, 11, 1)), [])
