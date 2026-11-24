@@ -311,3 +311,19 @@ class OperationCommand(models.Model):
     payload = models.JSONField()
     entry = models.ForeignKey(CashTransaction, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class SavedTransactionView(models.Model):
+    """Личная настройка пользователя, не финансовая запись предприятия."""
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=models.CASCADE)
+    name = models.CharField(max_length=80)
+    filters = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name", "pk"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "name"], condition=models.Q(organization__isnull=True), name="saved_view_personal_name"),
+            models.UniqueConstraint(fields=["owner", "organization", "name"], condition=models.Q(organization__isnull=False), name="saved_view_organization_name"),
+        ]

@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block crumb %}Подборки операций{% endblock %}{% block content %}
+<h1>Сохранённые подборки</h1><p>Личные фильтры в области «{{ ledger.name }}». Подборки не меняют финансовые данные. До 50 подборок в каждой области.</p>
+<p><a href="{% url 'transaction_list' %}">К операциям</a></p>
+{% if save_form.errors %}<div class="card" role="alert">{{ save_form.errors }}</div>{% endif %}
+{% for error in view_errors %}<p class="card" role="alert">{{ error }}</p>{% endfor %}
+{% for item in saved_views %}<article class="card"><h2><a href="{% url 'saved_view_open' item.pk %}">{{ item.name }}</a></h2><form method="post" action="{% url 'saved_view_delete' item.pk %}">{% csrf_token %}<button class="button secondary">Удалить подборку «{{ item.name }}»</button></form></article>{% empty %}<p class="card">Пока нет подборок. Выберите фильтры на странице операций и сохраните их под понятным названием.</p>{% endfor %}
+{% endblock %}

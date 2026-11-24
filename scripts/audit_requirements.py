@@ -34,7 +34,7 @@ def audit():
             count=sum(bool(line.strip()) for line in content.splitlines());metric='nonempty_markup_style_lines'
         counts.append({'file':name,'metric':metric,'count':count,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
     models=[{'model':m.__name__,'table':m._meta.db_table,'fields':[f.name for f in m._meta.local_fields]} for m in apps.get_app_config('cashflow').get_models()]
-    technical={'DemoDataset','OperationCommand'}
+    technical={'DemoDataset','OperationCommand','SavedTransactionView'}
     result={'schema_version':1,'source_head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         'code_counts':counts,'mixed_code_units':sum(row['count'] for row in counts),
         'method':'Python AST statements excluding docstrings/tests/migrations; HTML/CSS nonempty lines excluding comments. Different units are reported separately; not a standardized logical-line certification.',

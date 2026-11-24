@@ -33,7 +33,13 @@ from cashflow.quality import quality
 
 from cashflow.positions import positions
 
+from cashflow import saved_views
+
 urlpatterns = [
+    path("operations/saved/", saved_views.saved_view_list, name="saved_view_list"),
+    path("operations/saved/save/", saved_views.saved_view_save, name="saved_view_save"),
+    path("operations/saved/<int:pk>/", saved_views.saved_view_open, name="saved_view_open"),
+    path("operations/saved/<int:pk>/delete/", saved_views.saved_view_delete, name="saved_view_delete"),
     path("balances/", positions, name="positions"),
     path("quality/", quality, name="quality"),
     path("analytics/dimensions/", dimensions, name="dimensions"),
