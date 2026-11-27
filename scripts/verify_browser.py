@@ -97,6 +97,11 @@ def verify(app_python, output):
                     page.get_by_role('button',name='Сохранить сверку',exact=True).click();page.wait_for_url('**/reconciliation/')
                     assert 'Остатки совпадают' in page.locator('main').inner_text()
                     checks.append('dated_reconciliation_form_saved');shot('reconciliation-desktop.png')
+                    with page.expect_download() as result:page.get_by_role('link',name='Скачать сохранённые сверки CSV',exact=True).click()
+                    saved=target/'reconciliations.csv';result.value.save_as(saved)
+                    saved_rows=list(csv.DictReader(io.StringIO(saved.read_text(encoding='utf-8-sig')),delimiter=';'))
+                    assert len(saved_rows)==1 and saved_rows[0]['ledger_balance_at_check']=='188750.50'
+                    checks.append('saved_reconciliation_csv')
                     visit('/statement/')
                     page.locator('#id_account').select_option(str(ids['first']))
                     page.get_by_role('button',name='Сформировать выписку',exact=True).click()

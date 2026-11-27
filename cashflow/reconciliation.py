@@ -107,7 +107,7 @@ def reconciliation_list(request):
                 form.cleaned_data["checked_on"], form.cleaned_data["statement_balance"])
             messages.success(request, "Снимок сверки сохранён." if created else "Такая сверка уже сохранена.")
             return redirect("reconciliation_list")
-    filters=ReconciliationFilterForm(request.GET,scope=scope)
+    filters=ReconciliationFilterForm(request.GET,scope=scope,auto_id='reconciliation_filter_%s')
     status=200
     with report_scope(request.user, scope) as locked_scope:
         query = AccountReconciliation.objects.filter(account__in=locked_scope.catalog(BankAccount)).select_related("account", "actor")
