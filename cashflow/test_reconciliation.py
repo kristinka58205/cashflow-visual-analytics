@@ -49,3 +49,33 @@ class ReconciliationTests(TestCase):
         OrganizationMembership.objects.filter(user=viewer).delete()
         with self.assertRaises(PermissionDenied): reconcile(viewer, scope, self.account.pk, self.today, Decimal(0))
         self.assertFalse(AccountReconciliation.objects.exists())
+
+    def test_filtered_csv_keeps_original_snapshot_and_safe_labels(self):
+        import csv,io
+        self.account.name='=SUM(1)';self.account.save()
+        day=self.today-timedelta(days=1)
+        first,_=reconcile(self.user,self.scope,self.account.pk,day,Decimal('0.20'))
+        reconcile(self.user,self.scope,self.account.pk,self.today,Decimal('0.30'))
+        self.account.opening_balance='999.99';self.account.save()
+        self.client.force_login(self.user)
+        response=self.client.get('/reconciliation/',{'format':'csv','account':self.account.pk,'start':day,'end':day})
+        self.assertEqual(response.status_code,200)
+        rows=list(csv.DictReader(io.StringIO(response.content.decode('utf-8-sig')),delimiter=';'))
+        self.assertEqual(len(rows),1)
+        self.assertEqual((rows[0]['ledger_balance_at_check'],rows[0]['difference_at_check']),('0.10','0.10'))
+        self.assertEqual(rows[0]['account'],"'=SUM(1)")
+        self.assertEqual(response['Cache-Control'],'private, no-store')
+        first.refresh_from_db();self.assertEqual(first.ledger_balance,Decimal('0.10'))
+
+    def test_invalid_foreign_filters_and_export_limit_fail_closed(self):
+        from unittest.mock import patch
+        reconcile(self.user,self.scope,self.account.pk,self.today,Decimal('0.10'))
+        self.client.force_login(self.user)
+        for values in [{'start':self.today,'end':self.today-timedelta(days=1)},{'account':999999}]:
+            self.assertEqual(self.client.get('/reconciliation/',{**values,'format':'csv'}).status_code,400)
+        with patch('cashflow.reconciliation.MAX_EXPORT',0):
+            response=self.client.get('/reconciliation/?format=csv')
+            self.assertEqual(response.status_code,400);self.assertNotIn('Content-Disposition',response)
+        other=get_user_model().objects.create_user('export-outsider');self.client.force_login(other)
+        response=self.client.get('/reconciliation/?format=csv')
+        self.assertEqual(len(response.content.decode('utf-8-sig').splitlines()),1)

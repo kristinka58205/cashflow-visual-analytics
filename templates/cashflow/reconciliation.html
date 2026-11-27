@@ -5,9 +5,11 @@
 <h1>Сверка с банковской выпиской</h1>
 <p>Введите остаток на конец дня. Учёт включает начальный остаток счёта и фактические операции по эту дату. Плановые платежи не включаются. Выписка банка вводится вручную.</p>
 {% if ledger.can_write %}<form method="post" class="card">{% csrf_token %}{{ form.as_p }}<button class="button">Сохранить сверку</button></form>{% endif %}
+<form method="get" class="card filter-grid" aria-label="Фильтры сверок">{{ filters.as_p }}<button class="button">Показать сверки</button><a href="{% url 'reconciliation_list' %}">Сбросить фильтры</a></form>
+{% if not filters.errors %}<p><a href="?{{ export_query }}">Скачать сохранённые сверки CSV</a>. В CSV — значения на момент каждой сверки, без пересчёта текущего учёта. До2000 строк, все страницы выбранного периода.</p>{% endif %}
 <div class="table-wrap" tabindex="0" role="region" aria-label="Таблица; на узком экране прокручивается по горизонтали"><table><thead><tr><th>Счёт / дата</th><th>Выписка, ₽</th><th>Учёт при сверке, ₽</th><th>Расхождение, ₽</th><th>Состояние</th></tr></thead><tbody>
 {% for row in page %}<tr><td>{{ row.account.name }} / {{ row.checked_on|date:'d.m.Y' }}<br>{{ row.actor.get_username }} · {{ row.created_at|date:'d.m.Y H:i' }}</td><td>{{ row.statement_balance|floatformat:2 }}</td><td>{{ row.ledger_balance|floatformat:2 }}</td><td>{{ row.difference|floatformat:2 }}</td><td>{% if row.stale %}Учёт изменён: текущий остаток {{ row.current_balance|floatformat:2 }} ₽. Нужна новая сверка.{% elif row.difference %}Есть расхождение{% else %}Остатки совпадают{% endif %}</td></tr>{% empty %}<tr><td colspan="5">Сверок пока нет.</td></tr>{% endfor %}
 </tbody></table></div>
-{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Назад</a>{% endif %} Страница {{ page.number }} из {{ page.paginator.num_pages }} {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Далее</a>{% endif %}
+{% if page.has_previous %}<a href="?{{ page_query }}&amp;page={{ page.previous_page_number }}">Назад</a>{% endif %} Страница {{ page.number }} из {{ page.paginator.num_pages }} {% if page.has_next %}<a href="?{{ page_query }}&amp;page={{ page.next_page_number }}">Далее</a>{% endif %}
 <p>Снимки сохраняют историю. Изменение учёта задним числом не переписывает прежний результат и отмечается при следующем просмотре.</p>
 {% endblock %}
